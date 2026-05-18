@@ -97,6 +97,9 @@ public:
 	int Scale = 1;
 	
 	UPROPERTY(EditAnywhere, Category = "Chunk")
+	float RedistributionPow = 1.f;
+	
+	UPROPERTY(EditAnywhere, Category = "Chunk")
 	int Octaves = 3;
 
 private:

@@ -180,12 +180,12 @@ int AChunk::GetHeightAtLocation(float x, float y)
 {
 	float Total = 0.f;
 	float ScalarTotal = 0.f;
-	for (int i = 1; i < Octaves; ++i)
+	for (int i = 1; i <= Octaves; ++i)
 	{
 		float Scalar = FMath::Pow(2.f, i - 1.f);
-		ScalarTotal += 1 / Scalar;
-		Total += 1 / Scalar * Noise->GetNoise(Scalar * x, Scalar * y);
+		ScalarTotal += 1.f / Scalar;
+		Total += 1.f / Scalar * ((Noise->GetNoise(Scalar * x, Scalar * y) + 1.f) / 2.f);
 	}
-	return FMath::Clamp((Total / ScalarTotal + 1) * Size / 2, 0, Size);
+	return FMath::Clamp((FMath::Pow(Total / ScalarTotal * 1.2, RedistributionPow)) * (1 + Size / 2.f), 1, Size);
 }
 
