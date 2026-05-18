@@ -10,7 +10,7 @@ enum class EDirection
 	Down
 };
 
-enum class EBlock
+enum class EBlockType
 {
 	Null,
 	Air,

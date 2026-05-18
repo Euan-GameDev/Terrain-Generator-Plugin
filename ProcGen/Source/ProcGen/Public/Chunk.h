@@ -3,10 +3,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Block.h"
 #include "GameFramework/Actor.h"
 #include "Chunk.generated.h"
 
-enum class EBlock;
+enum class EBlockType;
 enum class EDirection;
 class UProceduralMeshComponent;
 class FastNoiseLite;
@@ -89,6 +90,7 @@ private:
 	
 	int GetHeightAtLocation(float x, float y);
 	
+	EBlockType GetBlockType(int X, int Y, int Z) const;
 public:
 	UPROPERTY(EditAnywhere, Category = "Chunk")
 	int Size = 32;
@@ -101,10 +103,12 @@ public:
 	
 	UPROPERTY(EditAnywhere, Category = "Chunk")
 	int Octaves = 3;
+	
+	TArray<Block> UnderGroundBlocks;
 
 private:
 	TObjectPtr<UProceduralMeshComponent> Mesh;
-	TArray<EBlock> Blocks;
+	TArray<EBlockType> Blocks;
 	TObjectPtr<FastNoiseLite> Noise;
 	
 	TArray<FVector> VertexNormals;

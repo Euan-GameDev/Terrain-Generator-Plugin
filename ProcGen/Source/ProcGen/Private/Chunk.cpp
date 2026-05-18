@@ -4,8 +4,7 @@
 #include "ProcGen/Public/Chunk.h"
 #include "ProceduralMeshComponent.h"
 #include "FastNoiseLite.h"
-#include <stdexcept>
-#include <string>
+#include "Block.h"
 
 #include "Enums.h"
 #include "Kismet/KismetSystemLibrary.h"
@@ -18,9 +17,20 @@ AChunk::AChunk()
 	PrimaryActorTick.bCanEverTick = false;
 	
 	Mesh = CreateDefaultSubobject<UProceduralMeshComponent>("Mesh");
-	Mesh->CastShadow = false;
+	Mesh->CastShadow = true;
 	
 	Blocks.SetNum(Size * Size * Size);
+	
+	// Manually Setting Blocks for testing purposes
+	Block Stone;
+	Block Air;
+	Stone.Type = EBlockType::Stone;
+	Stone.Probability = 1.f;
+	Air.Type = EBlockType::Air;
+	Air.Probability = 9.f;
+	
+	UnderGroundBlocks.Emplace(Stone);
+	UnderGroundBlocks.Emplace(Air);
 }
 
 // Called when the game starts or when spawned
@@ -65,17 +75,18 @@ void AChunk::GenerateBlocks()
 			
 			const int Height = GetHeightAtLocation(XPos, YPos);
 			
+			
 			// Everything at height or below will be stone for now
-			for (int z = 0; z < Height; ++z)
+			for (int z = 0; z <= Height; ++z)
 			{
-				Blocks[GetBlockIndex(x, y, z)] = EBlock::Stone;
+				Blocks[GetBlockIndex(x, y, z)] = GetBlockType(x,y,z);
 			}
 			// Everything above the height will be air
 			for (int z = Height; z < Size; ++z)
 			{
-				Blocks[GetBlockIndex(x, y, z)] = EBlock::Air;
+				Blocks[GetBlockIndex(x, y, z)] = EBlockType::Air;
 			}
-			
+			Blocks[GetBlockIndex(x, y, Height)] = EBlockType::Dirt;
 		}
 	}
 }
@@ -88,7 +99,7 @@ void AChunk::GenerateMesh()
 		{
 			for (int z = 0; z < Size; ++z)
 			{
-				if (Blocks[GetBlockIndex(x, y, z)] != EBlock::Air)
+				if (Blocks[GetBlockIndex(x, y, z)] != EBlockType::Air)
 				{
 					const auto Position = FVector(x, y, z);
 					
@@ -126,7 +137,7 @@ bool AChunk::Check(FVector Position) const
 		return true;
 	}
 	
-	return Blocks[GetBlockIndex(Position.X, Position.Y, Position.Z)] == EBlock::Air;
+	return Blocks[GetBlockIndex(Position.X, Position.Y, Position.Z)] == EBlockType::Air;
 }
 
 void AChunk::CreateFace(EDirection Direction, FVector Position)
@@ -179,5 +190,27 @@ int AChunk::GetHeightAtLocation(float x, float y)
 		Total += 1.f / Scalar * ((Noise->GetNoise(Scalar * x, Scalar * y) + 1.f) / 2.f);
 	}
 	return FMath::Clamp((FMath::Pow(Total / ScalarTotal * 1.2, RedistributionPow)) * (Size / 2.f), 1, Size);
+}
+
+EBlockType AChunk::GetBlockType(int X, int Y, int Z) const
+{
+	// Count up the total probability score of all the blocks
+	float totalProb = 0.f;
+	for (int i = 0; i < UnderGroundBlocks.Num(); ++i)
+	{
+		totalProb += UnderGroundBlocks[i].Probability;
+	}
+	// Get a random number between 0 and the total probability score
+	float Roll = FMath::RandRange(0.0f, totalProb);
+	for (int i = 0; i < UnderGroundBlocks.Num(); ++i)
+	{
+		Roll -= UnderGroundBlocks[i].Probability;
+		if (Roll <= 0.f)
+		{
+			return UnderGroundBlocks[i].Type;
+		}
+	}
+	
+	return EBlockType::Stone;
 }
 
