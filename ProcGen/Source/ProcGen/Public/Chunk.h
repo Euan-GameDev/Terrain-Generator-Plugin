@@ -107,7 +107,9 @@ private:
 	TArray<EBlock> Blocks;
 	TObjectPtr<FastNoiseLite> Noise;
 	
+	TArray<FVector> VertexNormals;
 	TArray<FVector> VertexData;
+	TArray<FColor> VertexColors;
 	TArray<int> TriangleData;
 	TArray<FVector2D> UVData;
 	
@@ -133,5 +135,15 @@ private:
 		1,4,7,2, // Left
 		5,4,1,0, // Up
 		3,2,7,6, // Down
+	};
+	
+	const FVector DirectionVectors[8] = 
+	{
+		FVector(1, 0, 0), // Forward
+		FVector(0, 1, 0), // Right
+		FVector(-1, 0, 0), // Back
+		FVector(0, -1, 0), // Left
+		FVector(0, 0, 1), // Up
+		FVector(0, 0, -1), // Down
 	};
 };

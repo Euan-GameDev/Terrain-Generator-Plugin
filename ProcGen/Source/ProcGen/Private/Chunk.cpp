@@ -5,8 +5,10 @@
 #include "ProceduralMeshComponent.h"
 #include "FastNoiseLite.h"
 #include <stdexcept>
+#include <string>
 
 #include "Enums.h"
+#include "Kismet/KismetSystemLibrary.h"
 
 
 // Sets default values
@@ -107,8 +109,11 @@ void AChunk::ApplyMesh() const
 {
 	// TODO We aren't generating normals, colors or tangents at the moment
 	// Not currently creating collision
-	Mesh->CreateMeshSection(0, VertexData, TriangleData, TArray<FVector>(), UVData, 
-				TArray<FColor>(), TArray<FProcMeshTangent>(), false);
+	Mesh->CreateMeshSection(0, VertexData, TriangleData, VertexNormals, UVData, 
+				VertexColors, TArray<FProcMeshTangent>(), false);
+	UKismetSystemLibrary::PrintString(GetWorld(), FString::Printf(TEXT("VertexColorSize = {%i}"), VertexColors.Num()));
+	UKismetSystemLibrary::PrintString(GetWorld(), FString::Printf(TEXT("VertexDataSize = {%i}"), VertexData.Num()));
+	//UKismetSystemLibrary::PrintString(GetWorld(), FString::Printf());
 }
 
 bool AChunk::Check(FVector Position) const
@@ -127,7 +132,15 @@ bool AChunk::Check(FVector Position) const
 void AChunk::CreateFace(EDirection Direction, FVector Position)
 {
 	VertexData.Append(GetFaceVertices(Direction, Position));
+	VertexColors.Add({0, 255, 0});
+	VertexColors.Add({0, 255, 0});
+	VertexColors.Add({0, 255, 0});
+	VertexColors.Add({0, 255, 0});
 	// UVData section is temporary until we add textures
+	VertexNormals.Add(DirectionVectors[static_cast<int>(Direction)]);
+	VertexNormals.Add(DirectionVectors[static_cast<int>(Direction)]);
+	VertexNormals.Add(DirectionVectors[static_cast<int>(Direction)]);
+	VertexNormals.Add(DirectionVectors[static_cast<int>(Direction)]);
 	UVData.Append({FVector2D(1, 1), FVector2D(1, 0), FVector2D(0, 0), FVector2D(0, 1)});
 	TriangleData.Append({VertexCount + 3, VertexCount + 2, VertexCount, VertexCount + 2, VertexCount + 1, VertexCount});
 	VertexCount += 4;
@@ -137,7 +150,7 @@ TArray<FVector> AChunk::GetFaceVertices(EDirection Direction, FVector Position) 
 {
 	TArray<FVector> Vertices;
 	
-	for (int i = 0; i < 4; ++i)
+	for (int i = 0; i < 4; i++)
 	{
 		Vertices.Add(BlockVertexData[BlockTriangleData[i + static_cast<int>(Direction) * 4]] * Scale + Position);
 	}
@@ -147,28 +160,7 @@ TArray<FVector> AChunk::GetFaceVertices(EDirection Direction, FVector Position) 
 
 FVector AChunk::GetPositionInDirection(EDirection Direction, FVector Position) const
 {
-	switch (Direction)
-	{
-	case EDirection::Forward:
-		return Position + FVector::ForwardVector;
-		break;
-	case EDirection::Right:
-		return Position + FVector::RightVector;
-		break;
-	case EDirection::Back:
-		return Position + FVector::BackwardVector;
-		break;
-	case EDirection::Left:
-		return Position + FVector::LeftVector;
-		break;
-	case EDirection::Up:
-		return Position + FVector::UpVector;
-		break;
-	case EDirection::Down:
-		return Position + FVector::DownVector;
-		break;
-	default: throw std::invalid_argument("Invalid Direction");
-	}
+	return Position + DirectionVectors[static_cast<int>(Direction)];
 }
 
 int AChunk::GetBlockIndex(int X, int Y, int Z) const
@@ -186,6 +178,6 @@ int AChunk::GetHeightAtLocation(float x, float y)
 		ScalarTotal += 1.f / Scalar;
 		Total += 1.f / Scalar * ((Noise->GetNoise(Scalar * x, Scalar * y) + 1.f) / 2.f);
 	}
-	return FMath::Clamp((FMath::Pow(Total / ScalarTotal * 1.2, RedistributionPow)) * (1 + Size / 2.f), 1, Size);
+	return FMath::Clamp((FMath::Pow(Total / ScalarTotal * 1.2, RedistributionPow)) * (Size / 2.f), 1, Size);
 }
 
