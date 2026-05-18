@@ -7,7 +7,6 @@
 #include "GameFramework/Actor.h"
 #include "Chunk.generated.h"
 
-enum class EBlockType;
 enum class EDirection;
 class UProceduralMeshComponent;
 class FastNoiseLite;
@@ -104,7 +103,8 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Chunk")
 	int Octaves = 3;
 	
-	TArray<Block> UnderGroundBlocks;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Chunk")
+	TArray<FBlock> UnderGroundBlocks;
 
 private:
 	TObjectPtr<UProceduralMeshComponent> Mesh;

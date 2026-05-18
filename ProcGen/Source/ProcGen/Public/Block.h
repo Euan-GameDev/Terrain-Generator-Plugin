@@ -1,14 +1,19 @@
 ﻿#pragma once
 #include "Enums.h"
+#include "Block.generated.h"
 
-struct Block
+USTRUCT(BlueprintType)
+struct FBlock
 {
+	GENERATED_BODY()
 public:
-	Block()
+	FBlock()
 	{
 		Type = EBlockType::Air;
 		Probability = 0.f;
 	};
+	UPROPERTY(BlueprintReadWrite)
 	EBlockType Type;
+	UPROPERTY(BlueprintReadWrite)
 	float Probability;
 };

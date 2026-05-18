@@ -10,7 +10,8 @@ enum class EDirection
 	Down
 };
 
-enum class EBlockType
+UENUM (BlueprintType)
+enum class EBlockType : uint8
 {
 	Null,
 	Air,

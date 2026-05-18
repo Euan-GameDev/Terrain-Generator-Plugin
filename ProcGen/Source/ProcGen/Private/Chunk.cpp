@@ -22,8 +22,8 @@ AChunk::AChunk()
 	Blocks.SetNum(Size * Size * Size);
 	
 	// Manually Setting Blocks for testing purposes
-	Block Stone;
-	Block Air;
+	FBlock Stone;
+	FBlock Air;
 	Stone.Type = EBlockType::Stone;
 	Stone.Probability = 1.f;
 	Air.Type = EBlockType::Air;
