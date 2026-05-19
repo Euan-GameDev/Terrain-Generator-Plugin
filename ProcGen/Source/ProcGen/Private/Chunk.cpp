@@ -30,6 +30,7 @@ void AChunk::BeginPlay()
 	AddBlockLayerToArray(SurfaceBlocks);
 	AddBlockLayerToArray(SubSurfaceBlocks);
 	AddBlockLayerToArray(UnderGroundBlocks);
+	AddBlockLayerToArray(MountainBlocks);
 	for (int i = 0; i < BlockTypes.Num(); i++)
 	{
 		//Mesh = (NewObject<UProceduralMeshComponent>(this, UProceduralMeshComponent::StaticClass(), "Mesh " + i));
@@ -99,8 +100,15 @@ void AChunk::GenerateBlocks()
 			{
 				Blocks[GetBlockIndex(x, y, z)] = GetBlockType(EBlockType::Air);
 			}
+			if (Height > Size * 0.5)
+			{
+				Blocks[GetBlockIndex(x, y, Height)] = GetBlockType(EBlockType::Mountain);
+			}
+			else
+			{
+				Blocks[GetBlockIndex(x, y, Height)] = GetBlockType(EBlockType::Surface);
+			}
 			
-			Blocks[GetBlockIndex(x, y, Height)] = GetBlockType(EBlockType::Surface);
 		}
 	}
 }
@@ -230,6 +238,9 @@ FBlock AChunk::GetBlockType(EBlockType layer) const
 		break;
 	case EBlockType::Null:
 		BlockArray = AirBlocks;
+		break;
+	case EBlockType::Mountain:
+		BlockArray = MountainBlocks;
 		break;
 	}
 	// Count up the total probability score of all the blocks

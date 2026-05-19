@@ -28,5 +28,6 @@ enum class EBlockType : uint8
 	UnderGround,
 	SubSurface,
 	Surface,
+	Mountain,
 	Null
 };

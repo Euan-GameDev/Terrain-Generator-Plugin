@@ -117,6 +117,9 @@ public:
 	
 	UPROPERTY(EditAnywhere, Category = "Chunk")
 	TArray<FBlock> AirBlocks;
+	
+	UPROPERTY(EditAnywhere, Category = "Chunk")
+	TArray<FBlock> MountainBlocks;
 
 private:
 	TObjectPtr<UProceduralMeshComponent> Mesh;
