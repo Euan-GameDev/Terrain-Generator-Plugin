@@ -80,16 +80,26 @@ void AChunk::GenerateBlocks()
 			const int Height = GetHeightAtLocation(XPos, YPos);
 			
 			
-			// Everything at height or below will be stone for now
+			
 			for (int z = 0; z <= Height; ++z)
 			{
 				Blocks[GetBlockIndex(x, y, z)] = GetBlockType(EBlockType::UnderGround);
 			}
+			
+			if (Height > 4)
+			{
+				for (int z = Height - 3; z <= Height; ++z)
+				{
+					Blocks[GetBlockIndex(x, y, z)] = GetBlockType(EBlockType::SubSurface);
+				}
+			}
+			
 			// Everything above the height will be air
 			for (int z = Height; z < Size; ++z)
 			{
 				Blocks[GetBlockIndex(x, y, z)] = GetBlockType(EBlockType::Air);
 			}
+			
 			Blocks[GetBlockIndex(x, y, Height)] = GetBlockType(EBlockType::Surface);
 		}
 	}
@@ -130,8 +140,6 @@ void AChunk::ApplyMesh() const
 		Mesh->CreateMeshSection(i, VertexData[i], TriangleData[i], VertexNormals[i], UVData[i], VertexColors[i], TArray<FProcMeshTangent>(), false);
 		Mesh->SetMaterial(i, BlockTypes[i]->Material);
 	}
-	//Mesh->CreateMeshSection(0, VertexData, TriangleData, VertexNormals, UVData, 
-	//			VertexColors, TArray<FProcMeshTangent>(), false);
 }
 
 bool AChunk::Check(FVector Position) const
