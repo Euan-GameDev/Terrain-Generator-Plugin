@@ -59,7 +59,7 @@ private:
 	 * @param Direction Direction for the face to generate
 	 * @param Position Position for the face to generate
 	 */
-	void CreateFace(EDirection Direction, FVector Position);
+	void CreateFace(EDirection Direction, FVector Position, EBlockType BlockType);
 	
 	/**
 	 * 
@@ -103,21 +103,28 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Chunk")
 	int Octaves = 3;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Chunk")
+	UPROPERTY(EditAnywhere, Category = "Chunk")
 	TArray<FBlock> UnderGroundBlocks;
+	
+	UPROPERTY(EditAnywhere, Category = "Chunk")
+	TArray<FBlock> SurfaceBlocks;
+	
+	UPROPERTY(EditAnywhere, Category = "Chunk")
+	TArray<FBlock> SkyBlocks;
 
 private:
-	TObjectPtr<UProceduralMeshComponent> Mesh;
-	TArray<EBlockType> Blocks;
+	TArray<TObjectPtr<UProceduralMeshComponent>> Meshes;
+	TArray<FBlock> BlockTypes;
+	TArray<FBlock> Blocks;
 	TObjectPtr<FastNoiseLite> Noise;
 	
-	TArray<FVector> VertexNormals;
-	TArray<FVector> VertexData;
-	TArray<FColor> VertexColors;
-	TArray<int> TriangleData;
-	TArray<FVector2D> UVData;
+	TArray<TArray<FVector>> VertexNormals;
+	TArray<TArray<FVector>> VertexData;
+	TArray<TArray<FColor>> VertexColors;
+	TArray<TArray<int>> TriangleData;
+	TArray<TArray<FVector2D>> UVData;
 	
-	int VertexCount = 0;
+	TArray<int> VertexCount;
 	
 	const FVector BlockVertexData[8] = 
 	{

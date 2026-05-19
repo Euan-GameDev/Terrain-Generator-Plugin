@@ -16,21 +16,7 @@ AChunk::AChunk()
 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
 	
-	Mesh = CreateDefaultSubobject<UProceduralMeshComponent>("Mesh");
-	Mesh->CastShadow = true;
-	
 	Blocks.SetNum(Size * Size * Size);
-	
-	// Manually Setting Blocks for testing purposes
-	FBlock Stone;
-	FBlock Air;
-	Stone.Type = EBlockType::Stone;
-	Stone.Probability = 1.f;
-	Air.Type = EBlockType::Air;
-	Air.Probability = 9.f;
-	
-	UnderGroundBlocks.Emplace(Stone);
-	UnderGroundBlocks.Emplace(Air);
 }
 
 // Called when the game starts or when spawned
@@ -38,8 +24,22 @@ void AChunk::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	
-	//Generate();
+	BlockTypes.Append(SkyBlocks);
+	BlockTypes.Append(UnderGroundBlocks);
+	BlockTypes.Append(SurfaceBlocks);
+	for (int i = 0; i < BlockTypes.Num(); i++)
+	{
+		Meshes.Emplace(NewObject<UProceduralMeshComponent>(this, UProceduralMeshComponent::StaticClass(), "Mesh " + i));
+		this->AddInstanceComponent(Meshes[i]);
+		Meshes[i]->RegisterComponent();
+		Meshes[i]->AttachToComponent(this->GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
+		VertexData.Add(TArray<FVector>());
+		VertexColors.Add(TArray<FColor>());
+		VertexNormals.Add(TArray<FVector>());
+		TriangleData.Add(TArray<int>());
+		UVData.Add(TArray<FVector2D>());
+		VertexCount.Add(0);
+	}
 }
 
 // Called every frame
@@ -79,14 +79,14 @@ void AChunk::GenerateBlocks()
 			// Everything at height or below will be stone for now
 			for (int z = 0; z <= Height; ++z)
 			{
-				Blocks[GetBlockIndex(x, y, z)] = GetBlockType(x,y,z);
+				Blocks[GetBlockIndex(x, y, z)].Type = GetBlockType(x,y,z);
 			}
 			// Everything above the height will be air
 			for (int z = Height; z < Size; ++z)
 			{
-				Blocks[GetBlockIndex(x, y, z)] = EBlockType::Air;
+				Blocks[GetBlockIndex(x, y, z)].Type = EBlockType::Air;
 			}
-			Blocks[GetBlockIndex(x, y, Height)] = EBlockType::Dirt;
+			Blocks[GetBlockIndex(x, y, Height)].Type = EBlockType::Dirt;
 		}
 	}
 }
@@ -99,7 +99,7 @@ void AChunk::GenerateMesh()
 		{
 			for (int z = 0; z < Size; ++z)
 			{
-				if (Blocks[GetBlockIndex(x, y, z)] != EBlockType::Air)
+				if (Blocks[GetBlockIndex(x, y, z)].Type != EBlockType::Air)
 				{
 					const auto Position = FVector(x, y, z);
 					
@@ -107,7 +107,7 @@ void AChunk::GenerateMesh()
 					{
 						if (Check(GetPositionInDirection(Direction, Position)))
 						{
-							CreateFace(Direction, Position * 100);
+							CreateFace(Direction, Position * 100, Blocks[GetBlockIndex(x, y, z)].Type);
 						}
 					}
 				}
@@ -120,11 +120,14 @@ void AChunk::ApplyMesh() const
 {
 	// TODO We aren't generating normals, colors or tangents at the moment
 	// Not currently creating collision
-	Mesh->CreateMeshSection(0, VertexData, TriangleData, VertexNormals, UVData, 
-				VertexColors, TArray<FProcMeshTangent>(), false);
-	UKismetSystemLibrary::PrintString(GetWorld(), FString::Printf(TEXT("VertexColorSize = {%i}"), VertexColors.Num()));
-	UKismetSystemLibrary::PrintString(GetWorld(), FString::Printf(TEXT("VertexDataSize = {%i}"), VertexData.Num()));
-	//UKismetSystemLibrary::PrintString(GetWorld(), FString::Printf());
+	
+	for (int i = 0; i < BlockTypes.Num(); i++)
+	{
+		Meshes[i]->CreateMeshSection(0, VertexData[i], TriangleData[i], VertexNormals[i], UVData[i], VertexColors[i], TArray<FProcMeshTangent>(), false);
+		Meshes[i]->SetMaterial(0, BlockTypes[i].Material);
+	}
+	//Mesh->CreateMeshSection(0, VertexData, TriangleData, VertexNormals, UVData, 
+	//			VertexColors, TArray<FProcMeshTangent>(), false);
 }
 
 bool AChunk::Check(FVector Position) const
@@ -137,24 +140,28 @@ bool AChunk::Check(FVector Position) const
 		return true;
 	}
 	
-	return Blocks[GetBlockIndex(Position.X, Position.Y, Position.Z)] == EBlockType::Air;
+	return Blocks[GetBlockIndex(Position.X, Position.Y, Position.Z)].Type == EBlockType::Air;
 }
 
-void AChunk::CreateFace(EDirection Direction, FVector Position)
+void AChunk::CreateFace(EDirection Direction, FVector Position, EBlockType BlockType)
 {
-	VertexData.Append(GetFaceVertices(Direction, Position));
-	VertexColors.Add({0, 255, 0});
-	VertexColors.Add({0, 255, 0});
-	VertexColors.Add({0, 255, 0});
-	VertexColors.Add({0, 255, 0});
-	// UVData section is temporary until we add textures
-	VertexNormals.Add(DirectionVectors[static_cast<int>(Direction)]);
-	VertexNormals.Add(DirectionVectors[static_cast<int>(Direction)]);
-	VertexNormals.Add(DirectionVectors[static_cast<int>(Direction)]);
-	VertexNormals.Add(DirectionVectors[static_cast<int>(Direction)]);
-	UVData.Append({FVector2D(1, 1), FVector2D(1, 0), FVector2D(0, 0), FVector2D(0, 1)});
-	TriangleData.Append({VertexCount + 3, VertexCount + 2, VertexCount, VertexCount + 2, VertexCount + 1, VertexCount});
-	VertexCount += 4;
+	if (BlockType == EBlockType::Air)
+	{
+		UKismetSystemLibrary::PrintString(GetWorld(), "Made air face");
+	}
+	int blockIndex = (int)BlockType;
+	VertexData[blockIndex].Append(GetFaceVertices(Direction, Position));
+	VertexColors[blockIndex].Add({0, 255, 0});
+	VertexColors[blockIndex].Add({0, 255, 0});
+	VertexColors[blockIndex].Add({0, 255, 0});
+	VertexColors[blockIndex].Add({0, 255, 0});
+	VertexNormals[blockIndex].Add(DirectionVectors[static_cast<int>(Direction)]);
+	VertexNormals[blockIndex].Add(DirectionVectors[static_cast<int>(Direction)]);
+	VertexNormals[blockIndex].Add(DirectionVectors[static_cast<int>(Direction)]);
+	VertexNormals[blockIndex].Add(DirectionVectors[static_cast<int>(Direction)]);
+	UVData[blockIndex].Append({FVector2D(1, 1), FVector2D(1, 0), FVector2D(0, 0), FVector2D(0, 1)});
+	TriangleData[blockIndex].Append({VertexCount[blockIndex] + 3, VertexCount[blockIndex] + 2, VertexCount[blockIndex], VertexCount[blockIndex] + 2, VertexCount[blockIndex] + 1, VertexCount[blockIndex]});
+	VertexCount[blockIndex] += 4;
 }
 
 TArray<FVector> AChunk::GetFaceVertices(EDirection Direction, FVector Position) const

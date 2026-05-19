@@ -13,9 +13,9 @@ enum class EDirection
 UENUM (BlueprintType)
 enum class EBlockType : uint8
 {
-	Null,
 	Air,
 	Stone,
 	Dirt,
-	Grass
+	Grass,
+	Null
 };

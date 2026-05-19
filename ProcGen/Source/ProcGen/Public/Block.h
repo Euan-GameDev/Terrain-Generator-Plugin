@@ -9,11 +9,14 @@ struct FBlock
 public:
 	FBlock()
 	{
-		Type = EBlockType::Air;
+		Type = EBlockType::Null;
 		Probability = 0.f;
+		Material = nullptr;
 	};
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, meta=(AllowPrivateAccess="true"))
 	EBlockType Type;
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, meta=(AllowPrivateAccess="true"))
 	float Probability;
+	UPROPERTY(EditAnywhere, meta=(AllowPrivateAccess="true"))
+	UMaterial* Material;
 };
