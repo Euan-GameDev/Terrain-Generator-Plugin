@@ -17,6 +17,8 @@ AChunk::AChunk()
 	PrimaryActorTick.bCanEverTick = false;
 	
 	Blocks.SetNum(Size * Size * Size);
+	Mesh = CreateDefaultSubobject<UProceduralMeshComponent>("Mesh");
+	Mesh->CastShadow = true;
 }
 
 // Called when the game starts or when spawned
@@ -29,10 +31,10 @@ void AChunk::BeginPlay()
 	BlockTypes.Append(SurfaceBlocks);
 	for (int i = 0; i < BlockTypes.Num(); i++)
 	{
-		Meshes.Emplace(NewObject<UProceduralMeshComponent>(this, UProceduralMeshComponent::StaticClass(), "Mesh " + i));
-		this->AddInstanceComponent(Meshes[i]);
-		Meshes[i]->RegisterComponent();
-		Meshes[i]->AttachToComponent(this->GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
+		//Mesh = (NewObject<UProceduralMeshComponent>(this, UProceduralMeshComponent::StaticClass(), "Mesh " + i));
+		//this->AddInstanceComponent(Mesh);
+		//Mesh->RegisterComponent();
+		//Mesh->AttachToComponent(this->GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
 		VertexData.Add(TArray<FVector>());
 		VertexColors.Add(TArray<FColor>());
 		VertexNormals.Add(TArray<FVector>());
@@ -123,8 +125,8 @@ void AChunk::ApplyMesh() const
 	
 	for (int i = 0; i < BlockTypes.Num(); i++)
 	{
-		Meshes[i]->CreateMeshSection(0, VertexData[i], TriangleData[i], VertexNormals[i], UVData[i], VertexColors[i], TArray<FProcMeshTangent>(), false);
-		Meshes[i]->SetMaterial(0, BlockTypes[i].Material);
+		Mesh->CreateMeshSection(i, VertexData[i], TriangleData[i], VertexNormals[i], UVData[i], VertexColors[i], TArray<FProcMeshTangent>(), false);
+		Mesh->SetMaterial(i, BlockTypes[i].Material);
 	}
 	//Mesh->CreateMeshSection(0, VertexData, TriangleData, VertexNormals, UVData, 
 	//			VertexColors, TArray<FProcMeshTangent>(), false);

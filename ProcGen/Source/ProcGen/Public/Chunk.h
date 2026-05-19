@@ -113,7 +113,7 @@ public:
 	TArray<FBlock> SkyBlocks;
 
 private:
-	TArray<TObjectPtr<UProceduralMeshComponent>> Meshes;
+	TObjectPtr<UProceduralMeshComponent> Mesh;
 	TArray<FBlock> BlockTypes;
 	TArray<FBlock> Blocks;
 	TObjectPtr<FastNoiseLite> Noise;
