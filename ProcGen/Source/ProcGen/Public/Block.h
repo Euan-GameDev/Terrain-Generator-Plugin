@@ -12,6 +12,7 @@ public:
 		Type = EBlockType::Null;
 		Probability = 0.f;
 		Material = nullptr;
+		BlockID = -1;
 	};
 	UPROPERTY(EditAnywhere, meta=(AllowPrivateAccess="true"))
 	EBlockType Type;
@@ -19,4 +20,7 @@ public:
 	float Probability;
 	UPROPERTY(EditAnywhere, meta=(AllowPrivateAccess="true"))
 	UMaterial* Material;
+	UPROPERTY(EditAnywhere, meta=(AllowPrivateAccess="true"))
+	int BlockID;
+	
 };

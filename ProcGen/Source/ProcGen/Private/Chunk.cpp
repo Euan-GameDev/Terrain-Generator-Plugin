@@ -26,9 +26,10 @@ void AChunk::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	BlockTypes.Append(SkyBlocks);
-	BlockTypes.Append(UnderGroundBlocks);
-	BlockTypes.Append(SurfaceBlocks);
+	AddBlockLayerToArray(AirBlocks);
+	AddBlockLayerToArray(SurfaceBlocks);
+	AddBlockLayerToArray(SubSurfaceBlocks);
+	AddBlockLayerToArray(UnderGroundBlocks);
 	for (int i = 0; i < BlockTypes.Num(); i++)
 	{
 		//Mesh = (NewObject<UProceduralMeshComponent>(this, UProceduralMeshComponent::StaticClass(), "Mesh " + i));
@@ -41,6 +42,7 @@ void AChunk::BeginPlay()
 		TriangleData.Add(TArray<int>());
 		UVData.Add(TArray<FVector2D>());
 		VertexCount.Add(0);
+		BlockTypes[i]->BlockID = i;
 	}
 }
 
@@ -81,14 +83,14 @@ void AChunk::GenerateBlocks()
 			// Everything at height or below will be stone for now
 			for (int z = 0; z <= Height; ++z)
 			{
-				Blocks[GetBlockIndex(x, y, z)].Type = GetBlockType(x,y,z);
+				Blocks[GetBlockIndex(x, y, z)] = GetBlockType(EBlockType::UnderGround);
 			}
 			// Everything above the height will be air
 			for (int z = Height; z < Size; ++z)
 			{
-				Blocks[GetBlockIndex(x, y, z)].Type = EBlockType::Air;
+				Blocks[GetBlockIndex(x, y, z)] = GetBlockType(EBlockType::Air);
 			}
-			Blocks[GetBlockIndex(x, y, Height)].Type = EBlockType::Dirt;
+			Blocks[GetBlockIndex(x, y, Height)] = GetBlockType(EBlockType::Surface);
 		}
 	}
 }
@@ -101,7 +103,7 @@ void AChunk::GenerateMesh()
 		{
 			for (int z = 0; z < Size; ++z)
 			{
-				if (Blocks[GetBlockIndex(x, y, z)].Type != EBlockType::Air)
+				if (Blocks[GetBlockIndex(x, y, z)].Type != EBlockType::Air && Blocks[GetBlockIndex(x, y, z)].Type != EBlockType::Null)
 				{
 					const auto Position = FVector(x, y, z);
 					
@@ -109,7 +111,7 @@ void AChunk::GenerateMesh()
 					{
 						if (Check(GetPositionInDirection(Direction, Position)))
 						{
-							CreateFace(Direction, Position * 100, Blocks[GetBlockIndex(x, y, z)].Type);
+							CreateFace(Direction, Position * 100, Blocks[GetBlockIndex(x, y, z)]);
 						}
 					}
 				}
@@ -126,7 +128,7 @@ void AChunk::ApplyMesh() const
 	for (int i = 0; i < BlockTypes.Num(); i++)
 	{
 		Mesh->CreateMeshSection(i, VertexData[i], TriangleData[i], VertexNormals[i], UVData[i], VertexColors[i], TArray<FProcMeshTangent>(), false);
-		Mesh->SetMaterial(i, BlockTypes[i].Material);
+		Mesh->SetMaterial(i, BlockTypes[i]->Material);
 	}
 	//Mesh->CreateMeshSection(0, VertexData, TriangleData, VertexNormals, UVData, 
 	//			VertexColors, TArray<FProcMeshTangent>(), false);
@@ -142,28 +144,28 @@ bool AChunk::Check(FVector Position) const
 		return true;
 	}
 	
-	return Blocks[GetBlockIndex(Position.X, Position.Y, Position.Z)].Type == EBlockType::Air;
+	return Blocks[GetBlockIndex(Position.X, Position.Y, Position.Z)].Type == EBlockType::Air || Blocks[GetBlockIndex(Position.X, Position.Y, Position.Z)].Type == EBlockType::Null;
 }
 
-void AChunk::CreateFace(EDirection Direction, FVector Position, EBlockType BlockType)
+void AChunk::CreateFace(EDirection Direction, FVector Position, FBlock BlockType)
 {
-	if (BlockType == EBlockType::Air)
+	if (BlockType.Type == EBlockType::Air)
 	{
 		UKismetSystemLibrary::PrintString(GetWorld(), "Made air face");
 	}
-	int blockIndex = (int)BlockType;
-	VertexData[blockIndex].Append(GetFaceVertices(Direction, Position));
-	VertexColors[blockIndex].Add({0, 255, 0});
-	VertexColors[blockIndex].Add({0, 255, 0});
-	VertexColors[blockIndex].Add({0, 255, 0});
-	VertexColors[blockIndex].Add({0, 255, 0});
-	VertexNormals[blockIndex].Add(DirectionVectors[static_cast<int>(Direction)]);
-	VertexNormals[blockIndex].Add(DirectionVectors[static_cast<int>(Direction)]);
-	VertexNormals[blockIndex].Add(DirectionVectors[static_cast<int>(Direction)]);
-	VertexNormals[blockIndex].Add(DirectionVectors[static_cast<int>(Direction)]);
-	UVData[blockIndex].Append({FVector2D(1, 1), FVector2D(1, 0), FVector2D(0, 0), FVector2D(0, 1)});
-	TriangleData[blockIndex].Append({VertexCount[blockIndex] + 3, VertexCount[blockIndex] + 2, VertexCount[blockIndex], VertexCount[blockIndex] + 2, VertexCount[blockIndex] + 1, VertexCount[blockIndex]});
-	VertexCount[blockIndex] += 4;
+	int BlockIndex = BlockType.BlockID;
+	VertexData[BlockIndex].Append(GetFaceVertices(Direction, Position));
+	VertexColors[BlockIndex].Add({0, 255, 0});
+	VertexColors[BlockIndex].Add({0, 255, 0});
+	VertexColors[BlockIndex].Add({0, 255, 0});
+	VertexColors[BlockIndex].Add({0, 255, 0});
+	VertexNormals[BlockIndex].Add(DirectionVectors[static_cast<int>(Direction)]);
+	VertexNormals[BlockIndex].Add(DirectionVectors[static_cast<int>(Direction)]);
+	VertexNormals[BlockIndex].Add(DirectionVectors[static_cast<int>(Direction)]);
+	VertexNormals[BlockIndex].Add(DirectionVectors[static_cast<int>(Direction)]);
+	UVData[BlockIndex].Append({FVector2D(1, 1), FVector2D(1, 0), FVector2D(0, 0), FVector2D(0, 1)});
+	TriangleData[BlockIndex].Append({VertexCount[BlockIndex] + 3, VertexCount[BlockIndex] + 2, VertexCount[BlockIndex], VertexCount[BlockIndex] + 2, VertexCount[BlockIndex] + 1, VertexCount[BlockIndex]});
+	VertexCount[BlockIndex] += 4;
 }
 
 TArray<FVector> AChunk::GetFaceVertices(EDirection Direction, FVector Position) const
@@ -201,25 +203,59 @@ int AChunk::GetHeightAtLocation(float x, float y)
 	return FMath::Clamp((FMath::Pow(Total / ScalarTotal * 1.2, RedistributionPow)) * (Size / 2.f), 1, Size);
 }
 
-EBlockType AChunk::GetBlockType(int X, int Y, int Z) const
+FBlock AChunk::GetBlockType(EBlockType layer) const
 {
-	// Count up the total probability score of all the blocks
-	float totalProb = 0.f;
-	for (int i = 0; i < UnderGroundBlocks.Num(); ++i)
+	TArray<FBlock> BlockArray;
+	switch (layer)
 	{
-		totalProb += UnderGroundBlocks[i].Probability;
+	case EBlockType::Air:
+		BlockArray = AirBlocks;
+		break;
+	case EBlockType::UnderGround:
+		BlockArray = UnderGroundBlocks;
+		break;
+	case EBlockType::SubSurface:
+		BlockArray = SubSurfaceBlocks;
+		break;
+	case EBlockType::Surface:
+		BlockArray = SurfaceBlocks;
+		break;
+	case EBlockType::Null:
+		BlockArray = AirBlocks;
+		break;
+	}
+	// Count up the total probability score of all the blocks
+	float TotalProb = 0.f;
+	float HighestProb = 0.f;
+	FBlock CommonBlock;
+	for (int i = 0; i < BlockArray.Num(); ++i)
+	{
+		if (BlockArray[i].Probability > HighestProb)
+		{
+			HighestProb = BlockArray[i].Probability;
+			CommonBlock = BlockArray[i];
+		}
+		TotalProb += BlockArray[i].Probability;
 	}
 	// Get a random number between 0 and the total probability score
-	float Roll = FMath::RandRange(0.0f, totalProb);
-	for (int i = 0; i < UnderGroundBlocks.Num(); ++i)
+	float Roll = FMath::RandRange(0.0f, TotalProb);
+	for (int i = 0; i < BlockArray.Num(); ++i)
 	{
-		Roll -= UnderGroundBlocks[i].Probability;
+		Roll -= BlockArray[i].Probability;
 		if (Roll <= 0.f)
 		{
-			return UnderGroundBlocks[i].Type;
+			return BlockArray[i];
 		}
 	}
 	
-	return EBlockType::Stone;
+	return CommonBlock;
+}
+
+void AChunk::AddBlockLayerToArray(TArray<FBlock>& layer)
+{
+	for (int i = 0; i < layer.Num(); ++i)
+	{
+		BlockTypes.Add(&layer[i]);
+	}
 }
 

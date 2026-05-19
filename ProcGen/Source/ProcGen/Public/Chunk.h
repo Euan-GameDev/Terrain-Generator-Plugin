@@ -59,7 +59,7 @@ private:
 	 * @param Direction Direction for the face to generate
 	 * @param Position Position for the face to generate
 	 */
-	void CreateFace(EDirection Direction, FVector Position, EBlockType BlockType);
+	void CreateFace(EDirection Direction, FVector Position, FBlock BlockType);
 	
 	/**
 	 * 
@@ -89,7 +89,10 @@ private:
 	
 	int GetHeightAtLocation(float x, float y);
 	
-	EBlockType GetBlockType(int X, int Y, int Z) const;
+	FBlock GetBlockType(EBlockType layer) const;
+	
+	void AddBlockLayerToArray(TArray<FBlock>& Blocks);
+	
 public:
 	UPROPERTY(EditAnywhere, Category = "Chunk")
 	int Size = 32;
@@ -107,14 +110,17 @@ public:
 	TArray<FBlock> UnderGroundBlocks;
 	
 	UPROPERTY(EditAnywhere, Category = "Chunk")
+	TArray<FBlock> SubSurfaceBlocks;
+	
+	UPROPERTY(EditAnywhere, Category = "Chunk")
 	TArray<FBlock> SurfaceBlocks;
 	
 	UPROPERTY(EditAnywhere, Category = "Chunk")
-	TArray<FBlock> SkyBlocks;
+	TArray<FBlock> AirBlocks;
 
 private:
 	TObjectPtr<UProceduralMeshComponent> Mesh;
-	TArray<FBlock> BlockTypes;
+	TArray<FBlock*> BlockTypes;
 	TArray<FBlock> Blocks;
 	TObjectPtr<FastNoiseLite> Noise;
 	

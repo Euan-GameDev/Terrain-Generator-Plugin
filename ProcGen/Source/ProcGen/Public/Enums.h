@@ -10,12 +10,23 @@ enum class EDirection
 	Down
 };
 
-UENUM (BlueprintType)
+/*UENUM (BlueprintType)
 enum class EBlockType : uint8
 {
 	Air,
 	Stone,
 	Dirt,
 	Grass,
+	Iron,
+	Null
+};*/
+
+UENUM (BlueprintType)
+enum class EBlockType : uint8
+{
+	Air,
+	UnderGround,
+	SubSurface,
+	Surface,
 	Null
 };
