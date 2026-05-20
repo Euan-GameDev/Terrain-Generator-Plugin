@@ -125,6 +125,12 @@ public:
 	
 	UPROPERTY(EditAnywhere, Category = "Chunk")
 	TArray<FBlock> MountainBlocks;
+	
+	UPROPERTY(EditAnywhere, Category = "Chunk")
+	bool GenerateCollision = false;
+	
+	UPROPERTY(EditAnywhere, Category = "Chunk")
+	bool EnableShadows = true;
 
 private:
 	TObjectPtr<UProceduralMeshComponent> Mesh;

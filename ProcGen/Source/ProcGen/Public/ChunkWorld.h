@@ -6,6 +6,7 @@
 #include "GameFramework/Actor.h"
 #include "ChunkWorld.generated.h"
 
+class AChunk;
 class FastNoiseLite;
 UCLASS()
 class PROCGEN_API AChunkWorld : public AActor
@@ -38,5 +39,7 @@ protected:
 	
 private:
 	TObjectPtr<FastNoiseLite> Noise;
+	
+	TArray<TObjectPtr<AChunk>> Chunks;
 
 };

@@ -10,6 +10,7 @@
 #include "Kismet/KismetSystemLibrary.h"
 
 
+using namespace UE::Tasks;
 // Sets default values
 AChunk::AChunk()
 {
@@ -18,7 +19,7 @@ AChunk::AChunk()
 	
 	Blocks.SetNum(Size * Size * Size);
 	Mesh = CreateDefaultSubobject<UProceduralMeshComponent>("Mesh");
-	Mesh->CastShadow = true;
+	Mesh->CastShadow = EnableShadows;
 }
 
 // Called when the game starts or when spawned
@@ -51,9 +52,10 @@ void AChunk::Tick(float DeltaTime)
 
 void AChunk::Generate()
 {
-	GenerateBlocks();
+	FTask GenBlocks = Launch(UE_SOURCE_LOCATION, [this]{GenerateBlocks();});
+
+	FTask GenMesh = Launch(UE_SOURCE_LOCATION, [this]{GenerateMesh();}, GenBlocks);
 	
-	GenerateMesh();
 }
 
 void AChunk::SetNoise(TObjectPtr<FastNoiseLite> ChunkNoise)
@@ -136,10 +138,12 @@ void AChunk::ApplyMesh() const
 {
 	// TODO We aren't generating normals, colors or tangents at the moment
 	// Not currently creating collision
-	
+	Mesh->bUseAsyncCooking = true;
 	for (int i = 0; i < BlockTypes.Num(); i++)
 	{
-		Mesh->CreateMeshSection(i, VertexData[i], TriangleData[i], VertexNormals[i], UVData[i], VertexColors[i], TArray<FProcMeshTangent>(), false);
+		Mesh->ClearMeshSection(i);
+		Mesh->CreateMeshSection(i, VertexData[i], TriangleData[i], VertexNormals[i], UVData[i], 
+								VertexColors[i], TArray<FProcMeshTangent>(), GenerateCollision);
 		Mesh->SetMaterial(i, BlockTypes[i]->Material);
 	}
 }

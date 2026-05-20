@@ -8,7 +8,8 @@
 #include "Kismet/KismetSystemLibrary.h"
 
 DECLARE_STATS_GROUP(TEXT("PerformanceStats"), STATGROUP_PerfStats, STATCAT)
-DECLARE_CYCLE_STAT(TEXT("GenTime"), GENTIME, STATGROUP_PerfStats)
+DECLARE_CYCLE_STAT(TEXT("GenPrep"), GENPREP, STATGROUP_PerfStats)
+DECLARE_CYCLE_STAT(TEXT("GenMesh"), GENMESH, STATGROUP_PerfStats)
 
 using UE::Tasks::FTask;
 
@@ -23,14 +24,12 @@ AChunkWorld::AChunkWorld()
 // Called when the game starts or when spawned
 void AChunkWorld::BeginPlay()
 {
-	SCOPE_CYCLE_COUNTER(GENTIME);
+	SCOPE_CYCLE_COUNTER(GENPREP);
 	Super::BeginPlay();
-	double Time = GetWorld()->GetTimeSeconds();
 	Noise->SetFrequency(Frequency);
 	Noise->SetNoiseType(FastNoiseLite::NoiseType_OpenSimplex2);
 	Noise->SetFractalType(FastNoiseLite::FractalType_FBm);
 	TArray<FTask> Tasks;
-	TArray<AChunk*> Chunks;
 	for (int x = -DrawDistance; x <= DrawDistance; ++x)
 	{
 		for (int y = -DrawDistance; y <= DrawDistance; ++y)
@@ -42,12 +41,11 @@ void AChunkWorld::BeginPlay()
 		}
 	}
 	UE::Tasks::Wait(Tasks);
+	SCOPE_CYCLE_COUNTER(GENMESH);
 	for (int i = 0; i < Chunks.Num(); ++i)
 	{
 		Chunks[i]->ApplyMesh();
 	}
-	
-	UKismetSystemLibrary::PrintText(GetWorld(), FText::FromString(FString::Printf(TEXT("World %f"), GetWorld()->GetTimeSeconds() - Time)));
 }
 
 
