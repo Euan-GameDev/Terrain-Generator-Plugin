@@ -33,10 +33,6 @@ void AChunk::BeginPlay()
 	AddBlockLayerToArray(MountainBlocks);
 	for (int i = 0; i < BlockTypes.Num(); i++)
 	{
-		//Mesh = (NewObject<UProceduralMeshComponent>(this, UProceduralMeshComponent::StaticClass(), "Mesh " + i));
-		//this->AddInstanceComponent(Mesh);
-		//Mesh->RegisterComponent();
-		//Mesh->AttachToComponent(this->GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
 		VertexData.Add(TArray<FVector>());
 		VertexColors.Add(TArray<FColor>());
 		VertexNormals.Add(TArray<FVector>());
@@ -58,8 +54,6 @@ void AChunk::Generate()
 	GenerateBlocks();
 	
 	GenerateMesh();
-	
-	ApplyMesh();
 }
 
 void AChunk::SetNoise(TObjectPtr<FastNoiseLite> ChunkNoise)
@@ -277,4 +271,3 @@ void AChunk::AddBlockLayerToArray(TArray<FBlock>& layer)
 		BlockTypes.Add(&layer[i]);
 	}
 }
-

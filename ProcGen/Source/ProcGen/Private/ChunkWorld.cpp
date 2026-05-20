@@ -5,7 +5,12 @@
 
 #include "Chunk.h"
 #include "FastNoiseLite.h"
+#include "Kismet/KismetSystemLibrary.h"
 
+DECLARE_STATS_GROUP(TEXT("PerformanceStats"), STATGROUP_PerfStats, STATCAT)
+DECLARE_CYCLE_STAT(TEXT("GenTime"), GENTIME, STATGROUP_PerfStats)
+
+using UE::Tasks::FTask;
 
 // Sets default values
 AChunkWorld::AChunkWorld()
@@ -18,22 +23,31 @@ AChunkWorld::AChunkWorld()
 // Called when the game starts or when spawned
 void AChunkWorld::BeginPlay()
 {
+	SCOPE_CYCLE_COUNTER(GENTIME);
 	Super::BeginPlay();
+	double Time = GetWorld()->GetTimeSeconds();
 	Noise->SetFrequency(Frequency);
 	Noise->SetNoiseType(FastNoiseLite::NoiseType_OpenSimplex2);
 	Noise->SetFractalType(FastNoiseLite::FractalType_FBm);
-	//Noise->SetFractalOctaves(Octaves);
-	
+	TArray<FTask> Tasks;
+	TArray<AChunk*> Chunks;
 	for (int x = -DrawDistance; x <= DrawDistance; ++x)
 	{
 		for (int y = -DrawDistance; y <= DrawDistance; ++y)
 		{
-			AChunk* CurrentChunk = GetWorld()->SpawnActor<AChunk>(Chunk, FVector(x * ChunkSize * 100, y * ChunkSize * 100, 0), FRotator::ZeroRotator);\
+			AChunk* CurrentChunk = GetWorld()->SpawnActor<AChunk>(Chunk, FVector(x * ChunkSize * 100, y * ChunkSize * 100, 0), FRotator::ZeroRotator);
 			CurrentChunk->SetNoise(Noise);
-			CurrentChunk->Generate();
+			Tasks.Add(UE::Tasks::Launch(UE_SOURCE_LOCATION, [CurrentChunk]{CurrentChunk->Generate();}));
+			Chunks.Add(CurrentChunk);
 		}
 	}
+	UE::Tasks::Wait(Tasks);
+	for (int i = 0; i < Chunks.Num(); ++i)
+	{
+		Chunks[i]->ApplyMesh();
+	}
 	
+	UKismetSystemLibrary::PrintText(GetWorld(), FText::FromString(FString::Printf(TEXT("World %f"), GetWorld()->GetTimeSeconds() - Time)));
 }
 
 

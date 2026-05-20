@@ -31,6 +31,11 @@ public:
 	void Generate();
 	
 	void SetNoise(TObjectPtr<FastNoiseLite> ChunkNoise);
+	
+	/**
+    	 * Pass the mesh data (index and vertex data) into the ProceduralMesh for rendering
+    	 */
+    	void ApplyMesh() const;
 private:
 	/**
 	 * Populate the Blocks array according to our heightmap
@@ -41,11 +46,6 @@ private:
 	 * Populate VertexData array based on the blocks
 	 */
 	void GenerateMesh();
-	
-	/**
-	 * Pass the mesh data (index and vertex data) into the ProceduralMesh for rendering
-	 */
-	void ApplyMesh() const;
 	
 	/**
 	 * 
@@ -86,7 +86,12 @@ private:
 	 * @return Index of the block at xyz location in the Blocks array
 	 */
 	int GetBlockIndex(int X, int Y, int Z) const;
-	
+	/**
+	 * 
+	 * @param x 
+	 * @param y 
+	 * @return The height at the entered location
+	 */
 	int GetHeightAtLocation(float x, float y);
 	
 	FBlock GetBlockType(EBlockType layer) const;
