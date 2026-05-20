@@ -32,14 +32,24 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Chunk")
 	float Frequency = 0.005f;
 
+	UPROPERTY(EditAnywhere, Category = "Chunk")
+	int ChunksGeneratedPerFrame = 100;
 
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 	
+	virtual void Tick( float DeltaTime ) override;
+	
 private:
 	TObjectPtr<FastNoiseLite> Noise;
 	
 	TArray<TObjectPtr<AChunk>> Chunks;
+	
+	TArray<TObjectPtr<AChunk>> UnGeneratedChunks;
+	
+	float MeshGenTimer = 0.f;
+	
+	bool FinishedGenerating = false;
 
 };

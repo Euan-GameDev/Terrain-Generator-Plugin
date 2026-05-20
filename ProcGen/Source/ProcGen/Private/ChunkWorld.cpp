@@ -25,14 +25,15 @@ AChunkWorld::AChunkWorld()
 void AChunkWorld::BeginPlay()
 {
 	SCOPE_CYCLE_COUNTER(GENPREP);
+	MeshGenTimer = GetWorld()->GetTimeSeconds();
 	Super::BeginPlay();
 	Noise->SetFrequency(Frequency);
 	Noise->SetNoiseType(FastNoiseLite::NoiseType_OpenSimplex2);
 	Noise->SetFractalType(FastNoiseLite::FractalType_FBm);
 	TArray<FTask> Tasks;
-	for (int x = -DrawDistance; x <= DrawDistance; ++x)
+	for (int x = -DrawDistance; x < DrawDistance; ++x)
 	{
-		for (int y = -DrawDistance; y <= DrawDistance; ++y)
+		for (int y = -DrawDistance; y < DrawDistance; ++y)
 		{
 			AChunk* CurrentChunk = GetWorld()->SpawnActor<AChunk>(Chunk, FVector(x * ChunkSize * 100, y * ChunkSize * 100, 0), FRotator::ZeroRotator);
 			CurrentChunk->SetNoise(Noise);
@@ -41,10 +42,35 @@ void AChunkWorld::BeginPlay()
 		}
 	}
 	UE::Tasks::Wait(Tasks);
+	UnGeneratedChunks = Chunks;
+	//for (int i = 0; i < Chunks.Num(); ++i)
+	//{
+	//	Chunks[i]->ApplyMesh();
+	//}
+}
+
+void AChunkWorld::Tick(float DeltaTime)
+{
 	SCOPE_CYCLE_COUNTER(GENMESH);
-	for (int i = 0; i < Chunks.Num(); ++i)
+	if (!UnGeneratedChunks.IsEmpty())
 	{
-		Chunks[i]->ApplyMesh();
+		for (int i = 0; i < ChunksGeneratedPerFrame; i++)
+		{
+			if (!UnGeneratedChunks.IsEmpty())
+			{
+				UnGeneratedChunks[UnGeneratedChunks.Num() / 2]->ApplyMesh();
+				UnGeneratedChunks.RemoveAt(UnGeneratedChunks.Num() / 2);
+				UKismetSystemLibrary::PrintString(GetWorld(), TEXT("Still generating"));
+			}
+		}
+	}
+	else
+	{
+		if (FinishedGenerating == false)
+		{
+			UKismetSystemLibrary::PrintString(GetWorld(), FString::Printf(TEXT("Time To Generate Mesh %f"), GetWorld()->GetTimeSeconds() - MeshGenTimer));
+			FinishedGenerating = true; 
+		}
 	}
 }
 
