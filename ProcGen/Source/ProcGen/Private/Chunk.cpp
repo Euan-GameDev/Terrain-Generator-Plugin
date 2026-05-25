@@ -8,6 +8,7 @@
 
 #include "Enums.h"
 #include "Kismet/KismetSystemLibrary.h"
+#include "ProceduralMeshComponent/Public/KismetProceduralMeshLibrary.h"
 
 
 using namespace UE::Tasks;
@@ -39,6 +40,7 @@ void AChunk::BeginPlay()
 		VertexNormals.Add(TArray<FVector>());
 		TriangleData.Add(TArray<int>());
 		UVData.Add(TArray<FVector2D>());
+		TangentData.Add(TArray<FProcMeshTangent>());
 		VertexCount.Add(0);
 		BlockTypes[i]->BlockID = i;
 	}
@@ -136,16 +138,16 @@ void AChunk::GenerateMesh()
 
 void AChunk::ApplyMesh()
 {
-	// TODO We aren't generating normals, colors or tangents at the moment
-	// Not currently creating collision
-	//Mesh->bUseAsyncCooking = true;
+	// TODO We aren't generating tangents at the moment
 	for (int i = 0; i < BlockTypes.Num(); i++)
 	{
-		//Mesh->ClearMeshSection(i);
+		TArray<FVector> TempArray;
+		//UKismetProceduralMeshLibrary::CalculateTangentsForMesh(VertexData[i], TriangleData[i], UVData[i], TempArray, TangentData[i]);
 		Mesh->CreateMeshSection(i, VertexData[i], TriangleData[i], VertexNormals[i], UVData[i], 
-								VertexColors[i], TArray<FProcMeshTangent>(), GenerateCollision);
+								TArray<FColor>(), TangentData[i], GenerateCollision);
 		Mesh->SetMaterial(i, BlockTypes[i]->Material);
 	}
+	
 }
 
 void AChunk::DisableMesh()

@@ -38,6 +38,9 @@ public:
 	
 	UPROPERTY(EditAnywhere, Category = "Chunk")
 	float RenderDistance;
+	
+	UPROPERTY(EditAnywhere, Category = "Chunk")
+	float PreLoadDistance = 5;
 
 protected:
 	// Called when the game starts or when spawned
@@ -46,6 +49,8 @@ protected:
 	virtual void Tick( float DeltaTime ) override;
 	
 	void CheckNeighbours(TObjectPtr<AChunk> CurrentChunk);
+	
+	void PreLoadInDistance(int distance);
 	
 private:
 	TObjectPtr<FastNoiseLite> Noise;

@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Block.h"
+#include "ProceduralMeshComponent.h"
 #include "GameFramework/Actor.h"
 #include "Chunk.generated.h"
 
@@ -150,6 +151,7 @@ private:
 	TArray<TArray<FColor>> VertexColors;
 	TArray<TArray<int>> TriangleData;
 	TArray<TArray<FVector2D>> UVData;
+	TArray<TArray<FProcMeshTangent>> TangentData;
 	
 	TArray<int> VertexCount;
 	

@@ -48,9 +48,9 @@ void AChunkWorld::BeginPlay()
 	}
 	UE::Tasks::Wait(Tasks);
 	// Load the chunk at the middle of the world instantly
-	Chunks[DrawDistance][DrawDistance]->ApplyMesh();
-	LoadedChunks.Add(Chunks[DrawDistance][DrawDistance]);
-	
+	//Chunks[DrawDistance][DrawDistance]->ApplyMesh();
+	//LoadedChunks.Add(Chunks[DrawDistance][DrawDistance]);
+	PreLoadInDistance(PreLoadDistance);
 	//for (int i = 0; i < Chunks.Num(); ++i)
 	//{
 	//	Chunks[i]->ApplyMesh();
@@ -71,7 +71,7 @@ void AChunkWorld::Tick(float DeltaTime)
 				UnLoadedChunks[0]->ApplyMesh();
 				LoadedChunks.Add(UnLoadedChunks[0]);
 				UnLoadedChunks.RemoveAt(0);
-				UKismetSystemLibrary::PrintString(GetWorld(), FString::Printf(TEXT("Still Generating chunks left: %i"), UnLoadedChunks.Num()));
+				//UKismetSystemLibrary::PrintString(GetWorld(), FString::Printf(TEXT("Still Generating chunks left: %i"), UnLoadedChunks.Num()));
 			}
 		}
 	}
@@ -123,6 +123,19 @@ void AChunkWorld::CheckNeighbours(TObjectPtr<AChunk> CurrentChunk)
 				UnLoadedChunks.Add(Chunks[x][y]);
 				CheckNeighbours(Chunks[x][y]);
 			}
+		}
+	}
+}
+
+void AChunkWorld::PreLoadInDistance(int distance)
+{
+	distance = FMath::Min(distance, DrawDistance);
+	for (int x = -distance; x < distance; x++)
+	{
+		for (int y = -distance; y < distance; y++)
+		{
+			Chunks[x + DrawDistance][y + DrawDistance]->ApplyMesh();
+			LoadedChunks.Add(Chunks[x + DrawDistance][y + DrawDistance]);
 		}
 	}
 }
