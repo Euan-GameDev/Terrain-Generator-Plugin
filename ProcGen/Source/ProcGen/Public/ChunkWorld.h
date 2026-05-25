@@ -34,6 +34,9 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "Chunk")
 	int ChunksGeneratedPerFrame = 100;
+	
+	UPROPERTY(EditAnywhere, Category = "Chunk")
+	float RenderDistance;
 
 protected:
 	// Called when the game starts or when spawned
@@ -46,10 +49,15 @@ private:
 	
 	TArray<TObjectPtr<AChunk>> Chunks;
 	
-	TArray<TObjectPtr<AChunk>> UnGeneratedChunks;
+	TArray<TObjectPtr<AChunk>> UnLoadedChunks;
+	
+	TArray<TObjectPtr<AChunk>> LoadedChunks;
 	
 	float MeshGenTimer = 0.f;
 	
 	bool FinishedGenerating = false;
+	
+	UPROPERTY()
+	AActor* Player;
 
 };

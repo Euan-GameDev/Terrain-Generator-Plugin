@@ -134,17 +134,25 @@ void AChunk::GenerateMesh()
 	}
 }
 
-void AChunk::ApplyMesh() const
+void AChunk::ApplyMesh()
 {
 	// TODO We aren't generating normals, colors or tangents at the moment
 	// Not currently creating collision
-	Mesh->bUseAsyncCooking = true;
+	//Mesh->bUseAsyncCooking = true;
 	for (int i = 0; i < BlockTypes.Num(); i++)
 	{
-		Mesh->ClearMeshSection(i);
+		//Mesh->ClearMeshSection(i);
 		Mesh->CreateMeshSection(i, VertexData[i], TriangleData[i], VertexNormals[i], UVData[i], 
 								VertexColors[i], TArray<FProcMeshTangent>(), GenerateCollision);
 		Mesh->SetMaterial(i, BlockTypes[i]->Material);
+	}
+}
+
+void AChunk::DisableMesh()
+{
+	for (int i = 0; i < BlockTypes.Num(); i++)
+	{
+		Mesh->ClearMeshSection(i);
 	}
 }
 
@@ -274,4 +282,14 @@ void AChunk::AddBlockLayerToArray(TArray<FBlock>& layer)
 	{
 		BlockTypes.Add(&layer[i]);
 	}
+}
+
+TArray<FVector2D> AChunk::GetNeighbours()
+{
+	return {
+			{ChunkCoords.X + 1, ChunkCoords.Y},
+			{ChunkCoords.X - 1, ChunkCoords.Y}, 
+			{ChunkCoords.X, ChunkCoords.Y + 1}, 
+			{ChunkCoords.X, ChunkCoords.Y - 1}
+				};
 }

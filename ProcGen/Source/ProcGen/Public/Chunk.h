@@ -33,9 +33,14 @@ public:
 	void SetNoise(TObjectPtr<FastNoiseLite> ChunkNoise);
 	
 	/**
-    	 * Pass the mesh data (index and vertex data) into the ProceduralMesh for rendering
-    	 */
-    	void ApplyMesh() const;
+    * Pass the mesh data (index and vertex data) into the ProceduralMesh for rendering
+    */
+	void ApplyMesh();
+	
+	void DisableMesh();
+	
+	TArray<FVector2D> GetNeighbours();
+	
 private:
 	/**
 	 * Populate the Blocks array according to our heightmap
@@ -130,7 +135,9 @@ public:
 	bool GenerateCollision = false;
 	
 	UPROPERTY(EditAnywhere, Category = "Chunk")
-	bool EnableShadows = true;
+	bool EnableShadows = false;
+	
+	FVector2D ChunkCoords = {0, 0};
 
 private:
 	TObjectPtr<UProceduralMeshComponent> Mesh;

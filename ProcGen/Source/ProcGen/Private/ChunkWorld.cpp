@@ -5,6 +5,7 @@
 
 #include "Chunk.h"
 #include "FastNoiseLite.h"
+#include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetSystemLibrary.h"
 
 DECLARE_STATS_GROUP(TEXT("PerformanceStats"), STATGROUP_PerfStats, STATCAT)
@@ -24,6 +25,7 @@ AChunkWorld::AChunkWorld()
 // Called when the game starts or when spawned
 void AChunkWorld::BeginPlay()
 {
+	Player = UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
 	SCOPE_CYCLE_COUNTER(GENPREP);
 	MeshGenTimer = GetWorld()->GetTimeSeconds();
 	Super::BeginPlay();
@@ -37,12 +39,12 @@ void AChunkWorld::BeginPlay()
 		{
 			AChunk* CurrentChunk = GetWorld()->SpawnActor<AChunk>(Chunk, FVector(x * ChunkSize * 100, y * ChunkSize * 100, 0), FRotator::ZeroRotator);
 			CurrentChunk->SetNoise(Noise);
+			CurrentChunk->ChunkCoords = {static_cast<double>(x), static_cast<double>(y)};
 			Tasks.Add(UE::Tasks::Launch(UE_SOURCE_LOCATION, [CurrentChunk]{CurrentChunk->Generate();}));
 			Chunks.Add(CurrentChunk);
 		}
 	}
 	UE::Tasks::Wait(Tasks);
-	UnGeneratedChunks = Chunks;
 	//for (int i = 0; i < Chunks.Num(); ++i)
 	//{
 	//	Chunks[i]->ApplyMesh();
@@ -52,15 +54,41 @@ void AChunkWorld::BeginPlay()
 void AChunkWorld::Tick(float DeltaTime)
 {
 	SCOPE_CYCLE_COUNTER(GENMESH);
-	if (!UnGeneratedChunks.IsEmpty())
+	for (int i = 0; i < Chunks.Num(); i++)
 	{
-		for (int i = 0; i < ChunksGeneratedPerFrame; i++)
+		//TArray<FVector2D> ChunksNeighbours = LoadedChunks[i]->GetNeighbours();
+		//for (int j = 0; j < ChunksNeighbours.Num(); j++)
+		
+		// If we are in range of the chunk and it's not already loaded add it to list of unloaded chunks that we need to load
+		if (Chunks[i]->GetDistanceTo(Player) < RenderDistance * ChunkSize * 100)
 		{
-			if (!UnGeneratedChunks.IsEmpty())
+			if (!LoadedChunks.Contains(Chunks[i]))
 			{
-				UnGeneratedChunks[UnGeneratedChunks.Num() / 2]->ApplyMesh();
-				UnGeneratedChunks.RemoveAt(UnGeneratedChunks.Num() / 2);
-				UKismetSystemLibrary::PrintString(GetWorld(), TEXT("Still generating"));
+				UnLoadedChunks.Add(Chunks[i]);
+			}
+		}
+		// if we aren't in range of the chunk and it should be loaded then unload it and remove it from the loaded array
+		else
+		{
+			if (LoadedChunks.Contains(Chunks[i]))
+			{
+				Chunks[i]->DisableMesh();
+				LoadedChunks.Remove(Chunks[i]);
+			}
+		}
+	}
+	
+	if (!UnLoadedChunks.IsEmpty())
+	{
+		// for each of the unloaded chunks we need to load
+		for (int i = 0; i < UnLoadedChunks.Num(); i++)
+		{
+			if (!UnLoadedChunks.IsEmpty())
+			{
+				UnLoadedChunks[0]->ApplyMesh();
+				LoadedChunks.Add(UnLoadedChunks[0]);
+				UnLoadedChunks.RemoveAt(0);
+				UKismetSystemLibrary::PrintString(GetWorld(), FString::Printf(TEXT("Still Generating chunks left: %i"), UnLoadedChunks.Num()));
 			}
 		}
 	}
@@ -72,6 +100,8 @@ void AChunkWorld::Tick(float DeltaTime)
 			FinishedGenerating = true; 
 		}
 	}
+	
+	
 }
 
 
