@@ -8,6 +8,7 @@
 
 class AChunk;
 class FastNoiseLite;
+
 UCLASS()
 class PROCGEN_API AChunkWorld : public AActor
 {
@@ -44,10 +45,12 @@ protected:
 	
 	virtual void Tick( float DeltaTime ) override;
 	
+	void CheckNeighbours(TObjectPtr<AChunk> CurrentChunk);
+	
 private:
 	TObjectPtr<FastNoiseLite> Noise;
 	
-	TArray<TObjectPtr<AChunk>> Chunks;
+	TArray<TArray<TObjectPtr<AChunk>>> Chunks;
 	
 	TArray<TObjectPtr<AChunk>> UnLoadedChunks;
 	

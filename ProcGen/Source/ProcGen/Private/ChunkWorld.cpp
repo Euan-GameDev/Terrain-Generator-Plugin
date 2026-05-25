@@ -35,16 +35,22 @@ void AChunkWorld::BeginPlay()
 	TArray<FTask> Tasks;
 	for (int x = -DrawDistance; x < DrawDistance; ++x)
 	{
+		TArray<TObjectPtr<AChunk>> CurrentArray;
 		for (int y = -DrawDistance; y < DrawDistance; ++y)
 		{
 			AChunk* CurrentChunk = GetWorld()->SpawnActor<AChunk>(Chunk, FVector(x * ChunkSize * 100, y * ChunkSize * 100, 0), FRotator::ZeroRotator);
 			CurrentChunk->SetNoise(Noise);
-			CurrentChunk->ChunkCoords = {static_cast<double>(x), static_cast<double>(y)};
+			CurrentChunk->ChunkCoords = {static_cast<double>(x + DrawDistance), static_cast<double>(y + DrawDistance)};
 			Tasks.Add(UE::Tasks::Launch(UE_SOURCE_LOCATION, [CurrentChunk]{CurrentChunk->Generate();}));
-			Chunks.Add(CurrentChunk);
+			CurrentArray.Add(CurrentChunk);
 		}
+		Chunks.Add(CurrentArray);
 	}
 	UE::Tasks::Wait(Tasks);
+	// Load the chunk at the middle of the world instantly
+	Chunks[DrawDistance][DrawDistance]->ApplyMesh();
+	LoadedChunks.Add(Chunks[DrawDistance][DrawDistance]);
+	
 	//for (int i = 0; i < Chunks.Num(); ++i)
 	//{
 	//	Chunks[i]->ApplyMesh();
@@ -78,26 +84,44 @@ void AChunkWorld::Tick(float DeltaTime)
 		}
 	}
 	
-	for (int i = 0; i < Chunks.Num(); i++)
+	// For every chunk that is loaded currently
+	for (int i = 0; i < LoadedChunks.Num(); i++)
 	{
-		//TArray<FVector2D> ChunksNeighbours = LoadedChunks[i]->GetNeighbours();
-		//for (int j = 0; j < ChunksNeighbours.Num(); j++)
-    		
 		// If we are in range of the chunk and it's not already loaded add it to list of unloaded chunks that we need to load
-		if (Chunks[i]->GetDistanceTo(Player) < RenderDistance * ChunkSize * 100)
+		if (LoadedChunks[i]->GetDistanceTo(Player) < RenderDistance * ChunkSize * 100)
 		{
-			if (!LoadedChunks.Contains(Chunks[i]) && !UnLoadedChunks.Contains(Chunks[i]))
-			{
-				UnLoadedChunks.Add(Chunks[i]);
-			}
+			CheckNeighbours(LoadedChunks[i]);
 		}
 		// if we aren't in range of the chunk and it should be loaded then unload it and remove it from the loaded array
 		else
 		{
-			if (LoadedChunks.Contains(Chunks[i]))
+			LoadedChunks[i]->DisableMesh();
+			LoadedChunks.RemoveAt(i);
+			UKismetSystemLibrary::PrintString(GetWorld(), FString::Printf(TEXT("Removed Chunk from loaded Chunks remaining: %i"), LoadedChunks.Num()));
+		}
+	}
+}
+
+
+void AChunkWorld::CheckNeighbours(TObjectPtr<AChunk> CurrentChunk)
+{
+	// Get the chunks neighbours
+	TArray<FVector2D> ChunksNeighbours = CurrentChunk->GetNeighbours();
+	for (int i = 0; i < ChunksNeighbours.Num(); i++)
+	{
+		int x = ChunksNeighbours[i].X;
+		int y = ChunksNeighbours[i].Y;
+		if (FMath::Abs(x) >= DrawDistance * 2 || FMath::Abs(y) >= DrawDistance * 2 || y < 0 || x < 0)
+		{
+			continue;
+		}
+		// If we are in range of the chunk and it's not already loaded add it to list of unloaded chunks that we need to load
+		if (Chunks[x][y]->GetDistanceTo(Player) < RenderDistance * ChunkSize * 100)
+		{
+			if (!LoadedChunks.Contains(Chunks[x][y]) && !UnLoadedChunks.Contains(Chunks[x][y]))
 			{
-				Chunks[i]->DisableMesh();
-				LoadedChunks.Remove(Chunks[i]);
+				UnLoadedChunks.Add(Chunks[x][y]);
+				CheckNeighbours(Chunks[x][y]);
 			}
 		}
 	}
