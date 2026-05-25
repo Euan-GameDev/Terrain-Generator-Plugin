@@ -54,34 +54,11 @@ void AChunkWorld::BeginPlay()
 void AChunkWorld::Tick(float DeltaTime)
 {
 	SCOPE_CYCLE_COUNTER(GENMESH);
-	for (int i = 0; i < Chunks.Num(); i++)
-	{
-		//TArray<FVector2D> ChunksNeighbours = LoadedChunks[i]->GetNeighbours();
-		//for (int j = 0; j < ChunksNeighbours.Num(); j++)
-		
-		// If we are in range of the chunk and it's not already loaded add it to list of unloaded chunks that we need to load
-		if (Chunks[i]->GetDistanceTo(Player) < RenderDistance * ChunkSize * 100)
-		{
-			if (!LoadedChunks.Contains(Chunks[i]))
-			{
-				UnLoadedChunks.Add(Chunks[i]);
-			}
-		}
-		// if we aren't in range of the chunk and it should be loaded then unload it and remove it from the loaded array
-		else
-		{
-			if (LoadedChunks.Contains(Chunks[i]))
-			{
-				Chunks[i]->DisableMesh();
-				LoadedChunks.Remove(Chunks[i]);
-			}
-		}
-	}
 	
 	if (!UnLoadedChunks.IsEmpty())
 	{
 		// for each of the unloaded chunks we need to load
-		for (int i = 0; i < UnLoadedChunks.Num(); i++)
+		for (int i = 0; i < ChunksGeneratedPerFrame; i++)
 		{
 			if (!UnLoadedChunks.IsEmpty())
 			{
@@ -101,7 +78,29 @@ void AChunkWorld::Tick(float DeltaTime)
 		}
 	}
 	
-	
+	for (int i = 0; i < Chunks.Num(); i++)
+	{
+		//TArray<FVector2D> ChunksNeighbours = LoadedChunks[i]->GetNeighbours();
+		//for (int j = 0; j < ChunksNeighbours.Num(); j++)
+    		
+		// If we are in range of the chunk and it's not already loaded add it to list of unloaded chunks that we need to load
+		if (Chunks[i]->GetDistanceTo(Player) < RenderDistance * ChunkSize * 100)
+		{
+			if (!LoadedChunks.Contains(Chunks[i]) && !UnLoadedChunks.Contains(Chunks[i]))
+			{
+				UnLoadedChunks.Add(Chunks[i]);
+			}
+		}
+		// if we aren't in range of the chunk and it should be loaded then unload it and remove it from the loaded array
+		else
+		{
+			if (LoadedChunks.Contains(Chunks[i]))
+			{
+				Chunks[i]->DisableMesh();
+				LoadedChunks.Remove(Chunks[i]);
+			}
+		}
+	}
 }
 
 
