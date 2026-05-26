@@ -21,6 +21,7 @@ AChunk::AChunk()
 	Blocks.SetNum(Size * Size * Size);
 	Mesh = CreateDefaultSubobject<UProceduralMeshComponent>("Mesh");
 	Mesh->CastShadow = EnableShadows;
+	RootComponent = Mesh;
 }
 
 // Called when the game starts or when spawned
@@ -77,8 +78,6 @@ void AChunk::GenerateBlocks()
 			const float YPos = (y * 100 + Location.Y) / 100;
 			
 			const int Height = GetHeightAtLocation(XPos, YPos);
-			
-			
 			
 			for (int z = 0; z <= Height; ++z)
 			{
@@ -187,7 +186,7 @@ void AChunk::CreateFace(EDirection Direction, FVector Position, FBlock BlockType
 	VertexNormals[BlockIndex].Add(DirectionVectors[static_cast<int>(Direction)]);
 	VertexNormals[BlockIndex].Add(DirectionVectors[static_cast<int>(Direction)]);
 	VertexNormals[BlockIndex].Add(DirectionVectors[static_cast<int>(Direction)]);
-	UVData[BlockIndex].Append({FVector2D(1, 1), FVector2D(1, 0), FVector2D(0, 0), FVector2D(0, 1)});
+	UVData[BlockIndex].Append({FVector2D(0, 0), FVector2D(1, 0), FVector2D(1, 1), FVector2D(0, 1)});
 	TriangleData[BlockIndex].Append({VertexCount[BlockIndex] + 3, VertexCount[BlockIndex] + 2, VertexCount[BlockIndex], VertexCount[BlockIndex] + 2, VertexCount[BlockIndex] + 1, VertexCount[BlockIndex]});
 	VertexCount[BlockIndex] += 4;
 }
@@ -284,6 +283,15 @@ void AChunk::AddBlockLayerToArray(TArray<FBlock>& layer)
 	{
 		BlockTypes.Add(&layer[i]);
 	}
+}
+
+void AChunk::ApplyBiomeEffects(AChunk* Biome)
+{
+	RedistributionPow += Biome->RedistributionPow;
+	RedistributionPow /= 2.f;
+	
+	Octaves += Biome->Octaves;
+	Octaves /= 2.f;
 }
 
 TArray<FVector2D> AChunk::GetNeighbours()

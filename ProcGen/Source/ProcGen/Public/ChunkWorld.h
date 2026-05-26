@@ -22,16 +22,22 @@ public:
 	TSubclassOf<AActor> Chunk;
 	
 	UPROPERTY(EditAnywhere, Category = "Voxel World")
+	TArray<TSubclassOf<AChunk>> BiomeChunks;
+	
+	UPROPERTY(EditAnywhere, Category = "Voxel World")
 	int DrawDistance = 5;
 	
 	UPROPERTY(EditAnywhere, Category = "Voxel World")
 	int ChunkSize = 32;
-	
+
 	UPROPERTY(EditAnywhere, Category = "Chunk")
-	int Octaves = 3;
+	float TerrainSeed;
 	
 	UPROPERTY(EditAnywhere, Category = "Chunk")
 	float Frequency = 0.005f;
+	
+	UPROPERTY(EditAnywhere, Category = "Chunk")
+	float BiomeFrequency = 0.005f;
 
 	UPROPERTY(EditAnywhere, Category = "Chunk")
 	int ChunksGeneratedPerFrame = 100;
@@ -52,8 +58,14 @@ protected:
 	
 	void PreLoadInDistance(int distance);
 	
+	int GetBiomeType(float x, float y);
+	
+	int GetNeighbourBiome(int OwnBiomeType, float x, float y);
+	
 private:
 	TObjectPtr<FastNoiseLite> Noise;
+	
+	TObjectPtr<FastNoiseLite> BiomeNoise;
 	
 	TArray<TArray<TObjectPtr<AChunk>>> Chunks;
 	

@@ -2,7 +2,6 @@
 
 
 #include "ChunkWorld.h"
-
 #include "Chunk.h"
 #include "FastNoiseLite.h"
 #include "Kismet/GameplayStatics.h"
@@ -20,6 +19,7 @@ AChunkWorld::AChunkWorld()
 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 	Noise = new FastNoiseLite();
+	BiomeNoise = new FastNoiseLite();
 }
 
 // Called when the game starts or when spawned
@@ -32,15 +32,28 @@ void AChunkWorld::BeginPlay()
 	Noise->SetFrequency(Frequency);
 	Noise->SetNoiseType(FastNoiseLite::NoiseType_OpenSimplex2);
 	Noise->SetFractalType(FastNoiseLite::FractalType_FBm);
+	Noise->SetSeed(TerrainSeed);
+	
+	BiomeNoise->SetNoiseType(FastNoiseLite::NoiseType_Cellular);
+	BiomeNoise->SetFrequency(BiomeFrequency);
+	BiomeNoise->SetCellularReturnType(FastNoiseLite::CellularReturnType_CellValue);
+	
 	TArray<FTask> Tasks;
 	for (int x = -DrawDistance; x < DrawDistance; ++x)
 	{
 		TArray<TObjectPtr<AChunk>> CurrentArray;
 		for (int y = -DrawDistance; y < DrawDistance; ++y)
 		{
-			AChunk* CurrentChunk = GetWorld()->SpawnActor<AChunk>(Chunk, FVector(x * ChunkSize * 100, y * ChunkSize * 100, 0), FRotator::ZeroRotator);
+			int BiomeTypeIndex = GetBiomeType(x * ChunkSize * 100, y * ChunkSize * 100);
+			TSubclassOf<AActor> ChunkType = BiomeChunks[BiomeTypeIndex];
+			AChunk* CurrentChunk = GetWorld()->SpawnActor<AChunk>(ChunkType, FVector(x * ChunkSize * 100, y * ChunkSize * 100, 0), FRotator::ZeroRotator);
 			CurrentChunk->SetNoise(Noise);
 			CurrentChunk->ChunkCoords = {static_cast<double>(x + DrawDistance), static_cast<double>(y + DrawDistance)};
+			if (int NeighbourBiome = GetNeighbourBiome(BiomeTypeIndex, x * ChunkSize * 100, y * ChunkSize * 100) != -1)
+			{
+				CurrentChunk->ApplyBiomeEffects(BiomeChunks[NeighbourBiome]->GetDefaultObject<AChunk>());
+			}
+			
 			Tasks.Add(UE::Tasks::Launch(UE_SOURCE_LOCATION, [CurrentChunk]{CurrentChunk->Generate();}));
 			CurrentArray.Add(CurrentChunk);
 		}
@@ -48,13 +61,8 @@ void AChunkWorld::BeginPlay()
 	}
 	UE::Tasks::Wait(Tasks);
 	// Load the chunk at the middle of the world instantly
-	//Chunks[DrawDistance][DrawDistance]->ApplyMesh();
-	//LoadedChunks.Add(Chunks[DrawDistance][DrawDistance]);
 	PreLoadInDistance(PreLoadDistance);
-	//for (int i = 0; i < Chunks.Num(); ++i)
-	//{
-	//	Chunks[i]->ApplyMesh();
-	//}
+
 }
 
 void AChunkWorld::Tick(float DeltaTime)
@@ -138,6 +146,45 @@ void AChunkWorld::PreLoadInDistance(int distance)
 			LoadedChunks.Add(Chunks[x + DrawDistance][y + DrawDistance]);
 		}
 	}
+}
+
+int AChunkWorld::GetBiomeType(float x, float y)
+{
+	float RangePerBiome = 1.f / BiomeChunks.Num();
+	float NoiseValue = (BiomeNoise->GetNoise(x, y) + 1.f) / 2.f;
+	for (int i = 0; i < BiomeChunks.Num(); i++)
+	{
+		if (NoiseValue <= (i + 1.f) * RangePerBiome)
+		{
+			return i;
+		}
+	}
+	return 0;
+}
+
+int AChunkWorld::GetNeighbourBiome(int OwnBiomeType, float x, float y)
+{
+	float RangePerBiome = 1.f / BiomeChunks.Num();
+	TArray<float> NeighbourNoiseValues;
+	NeighbourNoiseValues.Add((BiomeNoise->GetNoise(x + 1, y) + 1.f) / 2.f);
+	NeighbourNoiseValues.Add((BiomeNoise->GetNoise(x - 1, y) + 1.f) / 2.f);
+	NeighbourNoiseValues.Add((BiomeNoise->GetNoise(x, y + 1) + 1.f) / 2.f);
+	NeighbourNoiseValues.Add((BiomeNoise->GetNoise(x, y - 1) + 1.f) / 2.f);
+	for (int i = 0; i < NeighbourNoiseValues.Num(); i++)
+	{
+		for (int j = 0; j < BiomeChunks.Num(); j++)
+		{
+			if (NeighbourNoiseValues[i] <= (j + 1.f) * RangePerBiome)
+			{
+				if (j != OwnBiomeType)
+				{
+					return j;
+				}
+			}
+		}
+	}
+	
+	return -1;
 }
 
 

@@ -42,6 +42,8 @@ public:
 	
 	TArray<FVector2D> GetNeighbours();
 	
+	void ApplyBiomeEffects(AChunk* Biome);
+	
 private:
 	/**
 	 * Populate the Blocks array according to our heightmap
@@ -138,10 +140,13 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Chunk")
 	bool EnableShadows = false;
 	
+	UPROPERTY(VisibleAnywhere, Category = "Chunk")
 	FVector2D ChunkCoords = {0, 0};
 
 private:
+	UPROPERTY()
 	TObjectPtr<UProceduralMeshComponent> Mesh;
+	
 	TArray<FBlock*> BlockTypes;
 	TArray<FBlock> Blocks;
 	TObjectPtr<FastNoiseLite> Noise;
