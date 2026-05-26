@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Block.h"
+#include "ChunkNeighbour.h"
 #include "ProceduralMeshComponent.h"
 #include "GameFramework/Actor.h"
 #include "Chunk.generated.h"
@@ -43,6 +44,8 @@ public:
 	TArray<FVector2D> GetNeighbours();
 	
 	void ApplyBiomeEffects(AChunk* Biome);
+	
+	void AddNeighbourBiome(FChunkNeighbour Biome);
 	
 private:
 	/**
@@ -100,11 +103,13 @@ private:
 	 * @param y 
 	 * @return The height at the entered location
 	 */
-	int GetHeightAtLocation(float x, float y);
+	int GetHeightAtLocation(float x, float y, float xProgress, float yProgress);
 	
 	FBlock GetBlockType(EBlockType layer) const;
 	
 	void AddBlockLayerToArray(TArray<FBlock>& Blocks);
+	
+	void GenerateContainers();
 	
 public:
 	UPROPERTY(EditAnywhere, Category = "Chunk")
@@ -118,6 +123,9 @@ public:
 	
 	UPROPERTY(EditAnywhere, Category = "Chunk")
 	int Octaves = 3;
+	
+	UPROPERTY(EditAnywhere, Category = "Chunk")
+	float HeightScalar;
 	
 	UPROPERTY(EditAnywhere, Category = "Chunk")
 	TArray<FBlock> UnderGroundBlocks;
@@ -142,6 +150,9 @@ public:
 	
 	UPROPERTY(VisibleAnywhere, Category = "Chunk")
 	FVector2D ChunkCoords = {0, 0};
+	
+	UPROPERTY(VisibleAnywhere, Category = "Chunk")
+	TArray<FChunkNeighbour> ChunkNeighbours;
 
 private:
 	UPROPERTY()

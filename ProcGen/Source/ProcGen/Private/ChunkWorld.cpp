@@ -3,6 +3,7 @@
 
 #include "ChunkWorld.h"
 #include "Chunk.h"
+#include "ChunkNeighbour.h"
 #include "FastNoiseLite.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetSystemLibrary.h"
@@ -37,6 +38,7 @@ void AChunkWorld::BeginPlay()
 	BiomeNoise->SetNoiseType(FastNoiseLite::NoiseType_Cellular);
 	BiomeNoise->SetFrequency(BiomeFrequency);
 	BiomeNoise->SetCellularReturnType(FastNoiseLite::CellularReturnType_CellValue);
+	BiomeNoise->SetSeed(TerrainSeed);
 	
 	TArray<FTask> Tasks;
 	for (int x = -DrawDistance; x < DrawDistance; ++x)
@@ -44,15 +46,21 @@ void AChunkWorld::BeginPlay()
 		TArray<TObjectPtr<AChunk>> CurrentArray;
 		for (int y = -DrawDistance; y < DrawDistance; ++y)
 		{
-			int BiomeTypeIndex = GetBiomeType(x * ChunkSize * 100, y * ChunkSize * 100);
+			int BiomeTypeIndex = GetBiomeType({static_cast<double>(x + DrawDistance), static_cast<double>(y + DrawDistance)});
 			TSubclassOf<AActor> ChunkType = BiomeChunks[BiomeTypeIndex];
 			AChunk* CurrentChunk = GetWorld()->SpawnActor<AChunk>(ChunkType, FVector(x * ChunkSize * 100, y * ChunkSize * 100, 0), FRotator::ZeroRotator);
 			CurrentChunk->SetNoise(Noise);
 			CurrentChunk->ChunkCoords = {static_cast<double>(x + DrawDistance), static_cast<double>(y + DrawDistance)};
-			if (int NeighbourBiome = GetNeighbourBiome(BiomeTypeIndex, x * ChunkSize * 100, y * ChunkSize * 100) != -1)
+			for (int i = 0; i < CurrentChunk->GetNeighbours().Num(); i++)
 			{
-				CurrentChunk->ApplyBiomeEffects(BiomeChunks[NeighbourBiome]->GetDefaultObject<AChunk>());
+				int Type = GetBiomeType(CurrentChunk->GetNeighbours()[i]);
+				if (Type != BiomeTypeIndex)
+				{
+					AChunk* DefaultChunk = BiomeChunks[Type]->GetDefaultObject<AChunk>();
+					CurrentChunk->AddNeighbourBiome({CurrentChunk->GetNeighbours()[i] - CurrentChunk->ChunkCoords, DefaultChunk->RedistributionPow, DefaultChunk->HeightScalar, DefaultChunk->Octaves});
+				}
 			}
+			
 			
 			Tasks.Add(UE::Tasks::Launch(UE_SOURCE_LOCATION, [CurrentChunk]{CurrentChunk->Generate();}));
 			CurrentArray.Add(CurrentChunk);
@@ -79,7 +87,6 @@ void AChunkWorld::Tick(float DeltaTime)
 				UnLoadedChunks[0]->ApplyMesh();
 				LoadedChunks.Add(UnLoadedChunks[0]);
 				UnLoadedChunks.RemoveAt(0);
-				//UKismetSystemLibrary::PrintString(GetWorld(), FString::Printf(TEXT("Still Generating chunks left: %i"), UnLoadedChunks.Num()));
 			}
 		}
 	}
@@ -148,10 +155,10 @@ void AChunkWorld::PreLoadInDistance(int distance)
 	}
 }
 
-int AChunkWorld::GetBiomeType(float x, float y)
+int AChunkWorld::GetBiomeType(FVector2D Coords)
 {
 	float RangePerBiome = 1.f / BiomeChunks.Num();
-	float NoiseValue = (BiomeNoise->GetNoise(x, y) + 1.f) / 2.f;
+	float NoiseValue = (BiomeNoise->GetNoise(Coords.X, Coords.Y) + 1.f) / 2.f;
 	for (int i = 0; i < BiomeChunks.Num(); i++)
 	{
 		if (NoiseValue <= (i + 1.f) * RangePerBiome)
@@ -180,6 +187,7 @@ int AChunkWorld::GetNeighbourBiome(int OwnBiomeType, float x, float y)
 				{
 					return j;
 				}
+				break;
 			}
 		}
 	}

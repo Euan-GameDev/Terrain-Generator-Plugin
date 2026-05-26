@@ -58,7 +58,7 @@ protected:
 	
 	void PreLoadInDistance(int distance);
 	
-	int GetBiomeType(float x, float y);
+	int GetBiomeType(FVector2D Coords);
 	
 	int GetNeighbourBiome(int OwnBiomeType, float x, float y);
 	
