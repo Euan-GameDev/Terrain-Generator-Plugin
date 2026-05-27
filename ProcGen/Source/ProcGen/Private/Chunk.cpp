@@ -219,6 +219,7 @@ int AChunk::GetHeightAtLocation(float x, float y, float xProgress, float yProgre
 	int FinalOctaves = Octaves;
 	float FinalHeightScalar = HeightScalar;
 	float FinalRedistribPow = RedistributionPow;
+	float FinalRoundingPow = HeightRoundingPower;
 	for (int i = 0; i < ChunkNeighbours.Num(); i++)
 	{
 		// If the direction is opposite then the progress percentage is inversed.
@@ -239,6 +240,8 @@ int AChunk::GetHeightAtLocation(float x, float y, float xProgress, float yProgre
 			//FinalHeightScalar /= 2.f;
 			FinalRedistribPow = FMath::Lerp(FinalRedistribPow, (RedistributionPow + ChunkNeighbours[i].RedistribPow) / 2, Dir.X / ChunkNeighbours.Num());
 			//FinalRedistribPow /= 2.f;
+			FinalRoundingPow = FMath::Lerp(FinalRoundingPow, HeightRoundingPower * 3, Dir.X / ChunkNeighbours.Num());
+			
 		}
 		if (Dir.Y >= 0 && ChunkNeighbours[i].Direction.Y != 0)
 		{
@@ -248,6 +251,7 @@ int AChunk::GetHeightAtLocation(float x, float y, float xProgress, float yProgre
 			//FinalHeightScalar /= 2.f;
 			FinalRedistribPow = FMath::Lerp(FinalRedistribPow, (RedistributionPow + ChunkNeighbours[i].RedistribPow) / 2, Dir.Y / ChunkNeighbours.Num());
 			//FinalRedistribPow /= 2.f;
+			FinalRoundingPow = FMath::Lerp(FinalRoundingPow, HeightRoundingPower * 3, Dir.Y / ChunkNeighbours.Num());
 		}
 	}
 	
@@ -258,6 +262,10 @@ int AChunk::GetHeightAtLocation(float x, float y, float xProgress, float yProgre
 		float Scalar = FMath::Pow(2.f, i - 1.f);
 		ScalarTotal += 1.f / Scalar;
 		Total += 1.f / Scalar * ((Noise->GetNoise(Scalar * x, Scalar * y) + 1.f) / 2.f);
+	}
+	if (bHeightRounding)
+	{
+		return FMath::Clamp(FMath::RoundToInt((FMath::Pow(Total / ScalarTotal * FinalHeightScalar, FinalRedistribPow)) * (Size / 2.f) * HeightRoundingPower) / HeightRoundingPower, 1, Size - 1);
 	}
 	return FMath::Clamp((FMath::Pow(Total / ScalarTotal * FinalHeightScalar, FinalRedistribPow)) * (Size / 2.f), 1, Size - 1);
 }

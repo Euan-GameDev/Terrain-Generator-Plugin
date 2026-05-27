@@ -130,6 +130,12 @@ public:
 	float HeightScalar;
 	
 	UPROPERTY(EditAnywhere, Category = "Chunk")
+	bool bHeightRounding = false;
+	
+	UPROPERTY(EditAnywhere, Category = "Chunk")
+	float HeightRoundingPower = 1.f;
+	
+	UPROPERTY(EditAnywhere, Category = "Chunk")
 	float MountainHeightRequirement = 0.5;
 	
 	UPROPERTY(EditAnywhere, Category = "Chunk")
