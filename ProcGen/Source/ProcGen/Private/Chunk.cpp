@@ -231,23 +231,23 @@ int AChunk::GetHeightAtLocation(float x, float y, float xProgress, float yProgre
 		{
 			Dir.Y = (-yProgress * 100.f + 100) / 100.f;
 		}
-		if (Dir.X > 0)
+		if (Dir.X >= 0 && ChunkNeighbours[i].Direction.X != 0)
 		{
-			FinalOctaves += FMath::Lerp(FinalOctaves, ChunkNeighbours[i].Octaves, Dir.X);
-			FinalOctaves /= 2.f;
-			FinalHeightScalar += FMath::Lerp(FinalHeightScalar, ChunkNeighbours[i].HeightScalar, Dir.X);
-			FinalHeightScalar /= 2.f;
-			FinalRedistribPow += FMath::Lerp(FinalRedistribPow, ChunkNeighbours[i].RedistribPow, Dir.X);
-			FinalRedistribPow /= 2.f;
+			FinalOctaves = FMath::Lerp(FinalOctaves, (Octaves + ChunkNeighbours[i].Octaves) / 2, Dir.X / ChunkNeighbours.Num());
+			//FinalOctaves /= 2.f;
+			FinalHeightScalar = FMath::Lerp(FinalHeightScalar, (HeightScalar + ChunkNeighbours[i].HeightScalar) / 2, Dir.X / ChunkNeighbours.Num());
+			//FinalHeightScalar /= 2.f;
+			FinalRedistribPow = FMath::Lerp(FinalRedistribPow, (RedistributionPow + ChunkNeighbours[i].RedistribPow) / 2, Dir.X / ChunkNeighbours.Num());
+			//FinalRedistribPow /= 2.f;
 		}
-		if (Dir.Y > 0)
+		if (Dir.Y >= 0 && ChunkNeighbours[i].Direction.Y != 0)
 		{
-			FinalOctaves += FMath::Lerp(FinalOctaves, ChunkNeighbours[i].Octaves, Dir.Y);
-			FinalOctaves /= 2.f;
-			FinalHeightScalar += FMath::Lerp(FinalHeightScalar, ChunkNeighbours[i].HeightScalar, Dir.Y);
-			FinalHeightScalar /= 2.f;
-			FinalRedistribPow += FMath::Lerp(FinalRedistribPow, ChunkNeighbours[i].RedistribPow, Dir.Y);
-			FinalRedistribPow /= 2.f;
+			FinalOctaves = FMath::Lerp(FinalOctaves, (Octaves + ChunkNeighbours[i].Octaves) / 2, Dir.Y / ChunkNeighbours.Num());
+			//FinalOctaves /= 2.f;
+			FinalHeightScalar = FMath::Lerp(FinalHeightScalar, (HeightScalar + ChunkNeighbours[i].HeightScalar) / 2, Dir.Y / ChunkNeighbours.Num());
+			//FinalHeightScalar /= 2.f;
+			FinalRedistribPow = FMath::Lerp(FinalRedistribPow, (RedistributionPow + ChunkNeighbours[i].RedistribPow) / 2, Dir.Y / ChunkNeighbours.Num());
+			//FinalRedistribPow /= 2.f;
 		}
 	}
 	
