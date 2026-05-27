@@ -98,7 +98,7 @@ void AChunk::GenerateBlocks()
 			{
 				Blocks[GetBlockIndex(x, y, z)] = GetBlockType(EBlockType::Air);
 			}
-			if (Height > Size * 0.5)
+			if (Height > Size * MountainHeightRequirement)
 			{
 				Blocks[GetBlockIndex(x, y, Height)] = GetBlockType(EBlockType::Mountain);
 			}
@@ -350,6 +350,13 @@ void AChunk::GenerateContainers()
 		VertexCount.Add(0);
 		BlockTypes[i]->BlockID = i;
 	}
+}
+
+void AChunk::SetSize(int NewSize)
+{
+	Size = NewSize;
+	
+	Blocks.SetNum(Size * Size * Size);
 }
 
 void AChunk::ApplyBiomeEffects(AChunk* Biome)

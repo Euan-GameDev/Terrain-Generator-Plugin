@@ -47,6 +47,8 @@ public:
 	
 	void AddNeighbourBiome(FChunkNeighbour Biome);
 	
+	void SetSize(int NewSize);
+	
 private:
 	/**
 	 * Populate the Blocks array according to our heightmap
@@ -126,6 +128,9 @@ public:
 	
 	UPROPERTY(EditAnywhere, Category = "Chunk")
 	float HeightScalar;
+	
+	UPROPERTY(EditAnywhere, Category = "Chunk")
+	float MountainHeightRequirement = 0.5;
 	
 	UPROPERTY(EditAnywhere, Category = "Chunk")
 	TArray<FBlock> UnderGroundBlocks;

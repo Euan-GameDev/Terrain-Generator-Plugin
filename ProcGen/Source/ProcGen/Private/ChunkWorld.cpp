@@ -51,6 +51,7 @@ void AChunkWorld::BeginPlay()
 			AChunk* CurrentChunk = GetWorld()->SpawnActor<AChunk>(ChunkType, FVector(x * ChunkSize * 100, y * ChunkSize * 100, 0), FRotator::ZeroRotator);
 			CurrentChunk->SetNoise(Noise);
 			CurrentChunk->ChunkCoords = {static_cast<double>(x + DrawDistance), static_cast<double>(y + DrawDistance)};
+			CurrentChunk->SetSize(ChunkSize);
 			for (int i = 0; i < CurrentChunk->GetNeighbours().Num(); i++)
 			{
 				int Type = GetBiomeType(CurrentChunk->GetNeighbours()[i]);
