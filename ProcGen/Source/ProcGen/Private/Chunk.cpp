@@ -234,24 +234,24 @@ int AChunk::GetHeightAtLocation(float x, float y, float xProgress, float yProgre
 		}
 		if (Dir.X >= 0 && ChunkNeighbours[i].Direction.X != 0)
 		{
-			FinalOctaves = FMath::Lerp(FinalOctaves, (Octaves + ChunkNeighbours[i].Octaves) / 2, Dir.X / ChunkNeighbours.Num());
+			FinalOctaves = FMath::Lerp(FinalOctaves, (FinalOctaves + ChunkNeighbours[i].Octaves) / 2, Dir.X / ChunkNeighbours.Num());
 			//FinalOctaves /= 2.f;
-			FinalHeightScalar = FMath::Lerp(FinalHeightScalar, (HeightScalar + ChunkNeighbours[i].HeightScalar) / 2, Dir.X / ChunkNeighbours.Num());
+			FinalHeightScalar = FMath::Lerp(FinalHeightScalar, (FinalHeightScalar + ChunkNeighbours[i].HeightScalar) / 2, Dir.X / ChunkNeighbours.Num());
 			//FinalHeightScalar /= 2.f;
-			FinalRedistribPow = FMath::Lerp(FinalRedistribPow, (RedistributionPow + ChunkNeighbours[i].RedistribPow) / 2, Dir.X / ChunkNeighbours.Num());
+			FinalRedistribPow = FMath::Lerp(FinalRedistribPow, (FinalRedistribPow + ChunkNeighbours[i].RedistribPow) / 2, Dir.X / ChunkNeighbours.Num());
 			//FinalRedistribPow /= 2.f;
-			FinalRoundingPow = FMath::Lerp(FinalRoundingPow, HeightRoundingPower * 3, Dir.X / ChunkNeighbours.Num());
+			FinalRoundingPow = FMath::Lerp(FinalRoundingPow, FinalRoundingPow * 3, Dir.X / ChunkNeighbours.Num());
 			
 		}
 		if (Dir.Y >= 0 && ChunkNeighbours[i].Direction.Y != 0)
 		{
-			FinalOctaves = FMath::Lerp(FinalOctaves, (Octaves + ChunkNeighbours[i].Octaves) / 2, Dir.Y / ChunkNeighbours.Num());
+			FinalOctaves = FMath::Lerp(FinalOctaves, (FinalOctaves + ChunkNeighbours[i].Octaves) / 2, Dir.Y / ChunkNeighbours.Num());
 			//FinalOctaves /= 2.f;
-			FinalHeightScalar = FMath::Lerp(FinalHeightScalar, (HeightScalar + ChunkNeighbours[i].HeightScalar) / 2, Dir.Y / ChunkNeighbours.Num());
+			FinalHeightScalar = FMath::Lerp(FinalHeightScalar, (FinalHeightScalar + ChunkNeighbours[i].HeightScalar) / 2, Dir.Y / ChunkNeighbours.Num());
 			//FinalHeightScalar /= 2.f;
-			FinalRedistribPow = FMath::Lerp(FinalRedistribPow, (RedistributionPow + ChunkNeighbours[i].RedistribPow) / 2, Dir.Y / ChunkNeighbours.Num());
+			FinalRedistribPow = FMath::Lerp(FinalRedistribPow, (FinalRedistribPow + ChunkNeighbours[i].RedistribPow) / 2, Dir.Y / ChunkNeighbours.Num());
 			//FinalRedistribPow /= 2.f;
-			FinalRoundingPow = FMath::Lerp(FinalRoundingPow, HeightRoundingPower * 3, Dir.Y / ChunkNeighbours.Num());
+			FinalRoundingPow = FMath::Lerp(FinalRoundingPow, FinalRoundingPow * 3, Dir.Y / ChunkNeighbours.Num());
 		}
 	}
 	
@@ -395,9 +395,13 @@ void AChunk::AddNeighbourBiome(FChunkNeighbour Biome)
 TArray<FVector2D> AChunk::GetNeighbours()
 {
 	return {
+			{ChunkCoords.X + 1, ChunkCoords.Y - 1},
 			{ChunkCoords.X + 1, ChunkCoords.Y},
-			{ChunkCoords.X - 1, ChunkCoords.Y}, 
+			{ChunkCoords.X + 1, ChunkCoords.Y + 1},
+			{ChunkCoords.X, ChunkCoords.Y - 1},
 			{ChunkCoords.X, ChunkCoords.Y + 1}, 
-			{ChunkCoords.X, ChunkCoords.Y - 1}
+			{ChunkCoords.X - 1, ChunkCoords.Y - 1}, 
+			{ChunkCoords.X - 1, ChunkCoords.Y}, 
+			{ChunkCoords.X - 1, ChunkCoords.Y + 1} 
 				};
 }

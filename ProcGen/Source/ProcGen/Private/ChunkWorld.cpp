@@ -55,11 +55,8 @@ void AChunkWorld::BeginPlay()
 			for (int i = 0; i < CurrentChunk->GetNeighbours().Num(); i++)
 			{
 				int Type = GetBiomeType(CurrentChunk->GetNeighbours()[i]);
-				if (Type != BiomeTypeIndex)
-				{
-					AChunk* DefaultChunk = BiomeChunks[Type]->GetDefaultObject<AChunk>();
-					CurrentChunk->AddNeighbourBiome({CurrentChunk->GetNeighbours()[i] - CurrentChunk->ChunkCoords, DefaultChunk->RedistributionPow, DefaultChunk->HeightScalar, DefaultChunk->Octaves});
-				}
+				AChunk* DefaultChunk = BiomeChunks[Type]->GetDefaultObject<AChunk>();
+				CurrentChunk->AddNeighbourBiome({CurrentChunk->GetNeighbours()[i] - CurrentChunk->ChunkCoords, DefaultChunk->RedistributionPow, DefaultChunk->HeightScalar, DefaultChunk->Octaves});
 			}
 			
 			
