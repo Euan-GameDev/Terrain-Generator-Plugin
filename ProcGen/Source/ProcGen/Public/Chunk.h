@@ -30,8 +30,15 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 	
+	/**
+	 * Calls functions for generating mesh details
+	 */
 	void Generate();
 	
+	/**
+	 * Setter for terrain noise values
+	 * @param ChunkNoise Noise value from the chunkworld actor
+	 */
 	void SetNoise(TObjectPtr<FastNoiseLite> ChunkNoise);
 	
 	/**
@@ -39,14 +46,27 @@ public:
     */
 	void ApplyMesh();
 	
+	/**
+	 * Disabling Mesh.
+	 */
 	void DisableMesh();
 	
+	/**
+	 * 
+	 * @return Array of neighbour coordinates
+	 */
 	TArray<FVector2D> GetNeighbours();
 	
-	void ApplyBiomeEffects(AChunk* Biome);
-	
+	/**
+	 * Adds neighbor biome with passed in values.
+	 * @param Biome Passing through biome for getting biome generation values.
+	 */
 	void AddNeighbourBiome(FChunkNeighbour Biome);
 	
+	/**
+	 * Sets size of chunk and sets block array size based on new size.
+	 * @param NewSize Size to set the chunk to
+	 */
 	void SetSize(int NewSize);
 	
 private:
@@ -107,34 +127,68 @@ private:
 	 */
 	int GetHeightAtLocation(float x, float y, float xProgress, float yProgress);
 	
+	/**
+	 * 
+	 * @param layer Layer to get a block from
+	 * @return Random block in the layer based on the probability values of the blocks.
+	 */
 	FBlock GetBlockType(EBlockType layer) const;
 	
+	/**
+	 * 
+	 * @param Blocks Add this array of blocks to the blocks array
+	 */
 	void AddBlockLayerToArray(TArray<FBlock>& Blocks);
 	
+	/**
+	 * Sets up empty containers for the meshes details
+	 */
 	void GenerateContainers();
 	
 public:
+	/**
+	 * Size of the chunk is Size * Size * Size e.g if size is 32 each chunk will be 32 x 32 x 32 blocks.
+	 */
 	UPROPERTY(EditAnywhere, Category = "Chunk")
 	int Size = 32;
 	
 	UPROPERTY(EditAnywhere, Category = "Chunk")
 	int Scale = 1;
 	
+	/**
+	 * Will raise the height values (0 - 1 values) to the power of this variable.
+	 * This will cause steeper cliffs and flatter valleys.
+	 */
 	UPROPERTY(EditAnywhere, Category = "Chunk")
 	float RedistributionPow = 1.f;
 	
+	/**
+	 * Higher values will cause less randomness in the terrain and will smooth it out more.
+	 */
 	UPROPERTY(EditAnywhere, Category = "Chunk")
 	int Octaves = 3;
 	
+	/**
+	 * Multiply all height values by this scalar.
+	 */
 	UPROPERTY(EditAnywhere, Category = "Chunk")
 	float HeightScalar;
 	
+	/**
+	 * Whether height values will be rounded.
+	 */
 	UPROPERTY(EditAnywhere, Category = "Chunk")
 	bool bHeightRounding = false;
 	
+	/**
+	 * To what value height values should be rounded.
+	 */
 	UPROPERTY(EditAnywhere, Category = "Chunk")
 	float HeightRoundingPower = 1.f;
 	
+	/**
+	 * Above this requirement value the blocks will use blocks from the mountain blocks 
+	 */
 	UPROPERTY(EditAnywhere, Category = "Chunk")
 	float MountainHeightRequirement = 0.5;
 	

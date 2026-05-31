@@ -367,25 +367,6 @@ void AChunk::SetSize(int NewSize)
 	Blocks.SetNum(Size * Size * Size);
 }
 
-void AChunk::ApplyBiomeEffects(AChunk* Biome)
-{
-	//AirBlocks.Append(Biome->AirBlocks);
-	//SurfaceBlocks.Append(Biome->SurfaceBlocks);
-	//SubSurfaceBlocks.Append(Biome->SubSurfaceBlocks);
-	//UnderGroundBlocks.Append(Biome->UnderGroundBlocks);
-	//MountainBlocks.Append(Biome->MountainBlocks);
-	
-	//GenerateContainers();
-	
-	RedistributionPow += Biome->RedistributionPow;
-	RedistributionPow /= 2.f;
-	
-	HeightScalar += Biome->HeightScalar;
-	HeightScalar /= 2.f;
-	
-	Octaves += Biome->Octaves;
-	Octaves /= 2.f;
-}
 
 void AChunk::AddNeighbourBiome(FChunkNeighbour Biome)
 {
