@@ -1,0 +1,8 @@
+{
+	"OutputFiles": [
+		"..\\..\\..\\x64\\UnrealGame\\Shipping\\VoxelTerrainGenerator\\Module.VoxelTerrainGenerator.cpp.obj",
+		"..\\..\\..\\x64\\UnrealGame\\Shipping\\VoxelTerrainGenerator\\Chunk.cpp.obj",
+		"..\\..\\..\\x64\\UnrealGame\\Shipping\\VoxelTerrainGenerator\\ChunkWorld.cpp.obj",
+		"..\\..\\..\\x64\\UnrealGame\\Shipping\\VoxelTerrainGenerator\\VoxelTerrainGenerator.cpp.obj"
+	]
+}
