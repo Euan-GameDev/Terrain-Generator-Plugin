@@ -63,6 +63,9 @@ protected:
 	int GetBiomeType(FVector2D Coords);
 	
 	int GetNeighbourBiome(int OwnBiomeType, float x, float y);
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "ChunkWorld")
+	void StartedGenerating();
 	
 	UFUNCTION(BlueprintImplementableEvent, Category = "ChunkWorld")
 	void FinishedGenerating();

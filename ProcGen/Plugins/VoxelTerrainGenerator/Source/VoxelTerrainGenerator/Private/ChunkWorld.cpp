@@ -26,6 +26,7 @@ AChunkWorld::AChunkWorld()
 // Called when the game starts or when spawned
 void AChunkWorld::BeginPlay()
 {
+	StartedGenerating();
 	Player = UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
 	SCOPE_CYCLE_COUNTER(GENPREP);
 	MeshGenTimer = GetWorld()->GetTimeSeconds();
