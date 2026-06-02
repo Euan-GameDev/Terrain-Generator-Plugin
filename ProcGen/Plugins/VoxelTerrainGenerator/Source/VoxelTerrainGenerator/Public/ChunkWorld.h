@@ -26,28 +26,28 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Voxel World")
 	TArray<TSubclassOf<AChunk>> BiomeChunks;
 	
-	UPROPERTY(EditAnywhere, Category = "Voxel World")
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Voxel World")
 	int DrawDistance = 5;
 	
-	UPROPERTY(EditAnywhere, Category = "Voxel World")
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Voxel World")
 	int ChunkSize = 32;
 
-	UPROPERTY(EditAnywhere, Category = "Chunk")
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Chunk")
 	float TerrainSeed;
 	
-	UPROPERTY(EditAnywhere, Category = "Chunk")
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Chunk")
 	float Frequency = 0.005f;
 	
-	UPROPERTY(EditAnywhere, Category = "Chunk")
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Chunk")
 	float BiomeFrequency = 0.005f;
 
-	UPROPERTY(EditAnywhere, Category = "Chunk")
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Chunk")
 	int ChunksGeneratedPerFrame = 100;
 	
-	UPROPERTY(EditAnywhere, Category = "Chunk")
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Chunk")
 	float RenderDistance;
 	
-	UPROPERTY(EditAnywhere, Category = "Chunk")
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Chunk")
 	float PreLoadDistance = 5;
 
 protected:
@@ -64,6 +64,9 @@ protected:
 	
 	int GetNeighbourBiome(int OwnBiomeType, float x, float y);
 	
+	UFUNCTION(BlueprintImplementableEvent, Category = "ChunkWorld")
+	void FinishedGenerating();
+	
 private:
 	TObjectPtr<FastNoiseLite> Noise;
 	
@@ -76,8 +79,6 @@ private:
 	TArray<TObjectPtr<AChunk>> LoadedChunks;
 	
 	float MeshGenTimer = 0.f;
-	
-	bool FinishedGenerating = false;
 	
 	UPROPERTY()
 	APawn* Player;

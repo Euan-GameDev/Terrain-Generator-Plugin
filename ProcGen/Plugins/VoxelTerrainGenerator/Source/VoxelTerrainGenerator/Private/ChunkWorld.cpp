@@ -68,7 +68,7 @@ void AChunkWorld::BeginPlay()
 	UE::Tasks::Wait(Tasks);
 	// Load the chunk at the middle of the world instantly
 	PreLoadInDistance(PreLoadDistance);
-
+	FinishedGenerating();
 }
 
 void AChunkWorld::Tick(float DeltaTime)
@@ -86,14 +86,6 @@ void AChunkWorld::Tick(float DeltaTime)
 				LoadedChunks.Add(UnLoadedChunks[0]);
 				UnLoadedChunks.RemoveAt(0);
 			}
-		}
-	}
-	else
-	{
-		if (FinishedGenerating == false)
-		{
-			//UKismetSystemLibrary::PrintString(GetWorld(), FString::Printf(TEXT("Time To Generate Mesh %f"), GetWorld()->GetTimeSeconds() - MeshGenTimer));
-			FinishedGenerating = true; 
 		}
 	}
 	
