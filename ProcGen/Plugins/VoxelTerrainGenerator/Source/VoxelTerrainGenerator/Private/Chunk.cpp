@@ -137,6 +137,7 @@ void AChunk::GenerateMesh()
 
 void AChunk::ApplyMesh()
 {
+	Mesh->bUseAsyncCooking = true;
 	// TODO We aren't generating tangents at the moment
 	for (int i = 0; i < BlockTypes.Num(); i++)
 	{
