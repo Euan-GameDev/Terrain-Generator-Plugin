@@ -3,31 +3,27 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "PoissonNoise.generated.h"
 /**
  * 
  */
-UCLASS()
-class VOXELTERRAINGENERATOR_API APoissonNoise : public AActor
+
+class PoissonNoise
 {
-	GENERATED_BODY()
 public:
-	APoissonNoise();
+	PoissonNoise();
 	
-	~APoissonNoise();
+	~PoissonNoise();
 	
 public:
 	
-	UFUNCTION(BlueprintCallable)
 	void GenerateNoise();
 
 	FVector2D GetValue(int x, int y);
 	
-	UFUNCTION(BlueprintCallable)
 	void GenerateTexture();
-private:
 	
 	FVector2D WorldToGrid(FVector2D Point);
+private:
 	
 	FVector2D GenerateRandomPointAround(FVector2D Point);
 	
@@ -45,9 +41,14 @@ private:
 	// Map of grids/cells each cell can only have one point/vector2D
 	TArray<TArray<FVector2D>> GridMap;
 	
-	
-	
 	bool Generated = false;
+	
+public:
+	
+	UTexture2D* Texture;
+
+	// Array of all points
+	TArray<FVector2D> Points;
 	
 	int MinDistance = 500;
 	
@@ -57,12 +58,4 @@ private:
 	
 	int Width = 10000;
 	int Height = 10000;
-	
-public:
-	UPROPERTY(BlueprintReadWrite)
-	UTexture2D* Texture;
-
-	// Array of all points
-	UPROPERTY(BlueprintReadWrite)
-	TArray<FVector2D> Points;}
-;
+};

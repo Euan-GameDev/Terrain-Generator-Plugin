@@ -9,6 +9,7 @@
 #include "GameFramework/Actor.h"
 #include "Chunk.generated.h"
 
+class PoissonNoise;
 enum class EDirection;
 class UProceduralMeshComponent;
 class FastNoiseLite;
@@ -40,6 +41,12 @@ public:
 	 * @param ChunkNoise Noise value from the chunkworld actor
 	 */
 	void SetNoise(TObjectPtr<FastNoiseLite> ChunkNoise);
+	
+	/**
+	* Setter for terrain noise values
+	* @param ChunkNoise Noise value from the chunkworld actor
+	*/
+	void SetTreeNoise(TObjectPtr<PoissonNoise> NewNoise);
 	
 	/**
     * Pass the mesh data (index and vertex data) into the ProceduralMesh for rendering
@@ -226,6 +233,7 @@ private:
 	TArray<FBlock*> BlockTypes;
 	TArray<FBlock> Blocks;
 	TObjectPtr<FastNoiseLite> Noise;
+	TObjectPtr<PoissonNoise> TreeNoise;
 	
 	TArray<TArray<FVector>> VertexNormals;
 	TArray<TArray<FVector>> VertexData;

@@ -7,6 +7,7 @@
 #include "Block.h"
 #include "ChunkNeighbour.h"
 #include "Enums.h"
+#include "PoissonNoise.h"
 
 #include "Kismet/KismetSystemLibrary.h"
 
@@ -66,6 +67,11 @@ void AChunk::SetNoise(TObjectPtr<FastNoiseLite> ChunkNoise)
 	Noise = ChunkNoise;
 }
 
+void AChunk::SetTreeNoise(TObjectPtr<PoissonNoise> NewNoise)
+{
+	TreeNoise = NewNoise;
+}
+
 void AChunk::GenerateBlocks()
 {
 	const FVector Location = GetActorLocation();
@@ -91,11 +97,15 @@ void AChunk::GenerateBlocks()
 					Blocks[GetBlockIndex(x, y, z)] = GetBlockType(EBlockType::SubSurface);
 				}
 			}
-			
 			// Everything above the height will be air
 			for (int z = Height; z < Size; ++z)
 			{
 				Blocks[GetBlockIndex(x, y, z)] = GetBlockType(EBlockType::Air);
+				/*FVector2D WorldPosition = {x * 100 + Location.X, y * 100 + Location.Y};
+				if (TreeNoise->GetValue(abs(WorldPosition.X) / 2, abs(WorldPosition.Y) / 2) != FVector2D{0, 0})
+				{
+					Blocks[GetBlockIndex(x, y, z)] = GetBlockType(EBlockType::SubSurface);
+				}*/
 			}
 			if (Height > Size * MountainHeightRequirement)
 			{

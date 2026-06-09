@@ -8,6 +8,7 @@
 #include "GameFramework/WorldSettings.h"
 #include "ChunkWorld.generated.h"
 
+class PoissonNoise;
 class AChunk;
 class FastNoiseLite;
 
@@ -69,11 +70,14 @@ protected:
 	
 	UFUNCTION(BlueprintImplementableEvent, Category = "ChunkWorld")
 	void FinishedGenerating();
+
 	
 private:
 	TObjectPtr<FastNoiseLite> Noise;
 	
 	TObjectPtr<FastNoiseLite> BiomeNoise;
+	
+	TObjectPtr<PoissonNoise> TreeNoise;
 	
 	TArray<TArray<TObjectPtr<AChunk>>> Chunks;
 	

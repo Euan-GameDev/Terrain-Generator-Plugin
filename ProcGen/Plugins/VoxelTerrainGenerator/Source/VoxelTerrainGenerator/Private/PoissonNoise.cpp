@@ -4,7 +4,7 @@
 #include "PoissonNoise.h"
 
 
-APoissonNoise::APoissonNoise()
+PoissonNoise::PoissonNoise()
 	: CellSize{ 0.f }
 {
 	Texture = UTexture2D::CreateTransient(Width, Height, EPixelFormat::PF_R8G8B8A8, "Texture");
@@ -14,11 +14,11 @@ APoissonNoise::APoissonNoise()
 	Texture->UpdateResource();
 }
 
-APoissonNoise::~APoissonNoise()
+PoissonNoise::~PoissonNoise()
 {
 }
 
-void APoissonNoise::GenerateNoise()
+void PoissonNoise::GenerateNoise()
 {
 	// Set up the noise map
 	CellSize = MinDistance / 2;
@@ -46,9 +46,8 @@ void APoissonNoise::GenerateNoise()
 		for (int i = 0; i < NewPointCount; i++)
 		{
 			FVector2D NewPoint = GenerateRandomPointAround(Point);
-			// TODO FOLLOWING POISSON DISK SAMPLING PSUEDOCODE THIS IS WORDED WEIRDLY ATM
 			// Check that the point is in the grid
-			// and no points exist in the points neighbourhood
+			// and no points exist in the points neighborhood
 			if (InRect(NewPoint, {static_cast<double>(Width), static_cast<double>(Height)}) && !InNeighborhood(NewPoint))
 			{
 				// Update containers
@@ -61,12 +60,12 @@ void APoissonNoise::GenerateNoise()
 	Generated = true;
 }
 
-FVector2D APoissonNoise::GetValue(int x, int y)
+FVector2D PoissonNoise::GetValue(int x, int y)
 {
-	return GridMap[x / CellSize][y / CellSize];
+	return GridMap[abs(x) / CellSize][abs(y) / CellSize];
 }
 
-void APoissonNoise::GenerateTexture()
+void PoissonNoise::GenerateTexture()
 {
 	FTexture2DMipMap& Mip = Texture->GetPlatformData()->Mips[0];
 	void* TextureData = Mip.BulkData.Lock(LOCK_READ_WRITE);
@@ -101,12 +100,12 @@ void APoissonNoise::GenerateTexture()
 	Texture->UpdateResource();
 }
 
-FVector2D APoissonNoise::WorldToGrid(FVector2D Point)
+FVector2D PoissonNoise::WorldToGrid(FVector2D Point)
 {
 	return {Point.X / CellSize, Point.Y / CellSize};
 }
 
-FVector2D APoissonNoise::GenerateRandomPointAround(FVector2D Point)
+FVector2D PoissonNoise::GenerateRandomPointAround(FVector2D Point)
 {
 	// Non-uniform, favours points closer to the inner ring, leads to denser packings
 	double R1 = FMath::RandRange(0.f, 1.f);
@@ -121,7 +120,7 @@ FVector2D APoissonNoise::GenerateRandomPointAround(FVector2D Point)
 	return {Point.X + Radius * cos(Angle), Point.Y + Radius * sin(Angle)};
 }
 
-bool APoissonNoise::InRect(FVector2D Point, FVector2D Rect)
+bool PoissonNoise::InRect(FVector2D Point, FVector2D Rect)
 {
 	if (Point.X < Rect.X && Point.X > 0 && Point.Y < Rect.Y && Point.Y > 0)
 	{
@@ -130,7 +129,7 @@ bool APoissonNoise::InRect(FVector2D Point, FVector2D Rect)
 	return false;
 }
 
-bool APoissonNoise::InNeighborhood(FVector2D Point)
+bool PoissonNoise::InNeighborhood(FVector2D Point)
 {
 	FVector2D GridPoint = WorldToGrid(Point);
 	// Get the neighbourhood if the point in the grid
@@ -145,7 +144,7 @@ bool APoissonNoise::InNeighborhood(FVector2D Point)
 	return false;
 }
 
-TArray<FVector2D> APoissonNoise::SquareAroundPoint(FVector2D Point)
+TArray<FVector2D> PoissonNoise::SquareAroundPoint(FVector2D Point)
 {
 	TArray<FVector2D> CellsAroundPoint;
 	// Make sure that the cells are in the range of our gridmap

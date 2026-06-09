@@ -6,6 +6,7 @@
 #include "ChunkNeighbour.h"
 #include "FastNoiseLite.h"
 #include "CoreMinimal.h"
+#include "PoissonNoise.h"
 #include "Kismet/GameplayStatics.h"
 
 DECLARE_STATS_GROUP(TEXT("PerformanceStats"), STATGROUP_PerfStats, STATCAT)
@@ -21,6 +22,7 @@ AChunkWorld::AChunkWorld()
 	PrimaryActorTick.bCanEverTick = true;
 	Noise = new FastNoiseLite();
 	BiomeNoise = new FastNoiseLite();
+	TreeNoise = new PoissonNoise();
 }
 
 // Called when the game starts or when spawned
@@ -41,6 +43,12 @@ void AChunkWorld::BeginPlay()
 	BiomeNoise->SetCellularReturnType(FastNoiseLite::CellularReturnType_CellValue);
 	BiomeNoise->SetSeed(TerrainSeed);
 	
+	TreeNoise->Width = DrawDistance * 200 * ChunkSize;
+	TreeNoise->Height = DrawDistance * 200 * ChunkSize;
+	TreeNoise->MinDistance = 5000;
+	TreeNoise->GenerateNoise();
+	
+	
 	TArray<FTask> Tasks;
 	for (int x = -DrawDistance; x < DrawDistance; ++x)
 	{
@@ -51,6 +59,7 @@ void AChunkWorld::BeginPlay()
 			TSubclassOf<AActor> ChunkType = BiomeChunks[BiomeTypeIndex];
 			AChunk* CurrentChunk = GetWorld()->SpawnActor<AChunk>(ChunkType, FVector(x * ChunkSize * 100, y * ChunkSize * 100, 0), FRotator::ZeroRotator);
 			CurrentChunk->SetNoise(Noise);
+			CurrentChunk->SetTreeNoise(TreeNoise);
 			CurrentChunk->ChunkCoords = {static_cast<double>(x + DrawDistance), static_cast<double>(y + DrawDistance)};
 			CurrentChunk->SetSize(ChunkSize);
 			for (int i = 0; i < CurrentChunk->GetNeighbours().Num(); i++)
@@ -67,6 +76,7 @@ void AChunkWorld::BeginPlay()
 		Chunks.Add(CurrentArray);
 	}
 	UE::Tasks::Wait(Tasks);
+	
 	// Load the chunk at the middle of the world instantly
 	PreLoadInDistance(PreLoadDistance);
 	FinishedGenerating();
