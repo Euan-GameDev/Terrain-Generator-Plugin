@@ -4,36 +4,38 @@
 #include "PoissonNoise.h"
 
 
-PoissonNoise::PoissonNoise()
+APoissonNoise::APoissonNoise()
 	: CellSize{ 0.f }
 {
-	Texture = UTexture2D::CreateTransient(Width, Height);
+	Texture = UTexture2D::CreateTransient(Width, Height, EPixelFormat::PF_R8G8B8A8, "Texture");
+	Texture->CompressionSettings = TextureCompressionSettings::TC_VectorDisplacementmap;
+	Texture->SRGB = 0;
+	Texture->Filter = TextureFilter::TF_Nearest;
 	Texture->UpdateResource();
 }
 
-PoissonNoise::~PoissonNoise()
+APoissonNoise::~APoissonNoise()
 {
 }
 
-void PoissonNoise::GenerateNoise()
+void APoissonNoise::GenerateNoise()
 {
 	// Set up the noise map
-	CellSize = MinDistance / sqrt(2);
+	CellSize = MinDistance / 2;
 	
-	GridMap.SetNum(Width/CellSize);
-	for (TArray Column : GridMap)
+	GridMap.SetNum(ceil(Width/CellSize));
+	for (int i = 0; i < GridMap.Num(); i++)
 	{
-		Column.SetNum(Height/CellSize);
+		GridMap[i].SetNum(ceil(Height/CellSize));
 	}
 	
 	// Set up a queue, items should be taken from this queue randomly instead of in order
 	TArray<FVector2D> ProcessList;
-	TArray<FVector2D> SamplePoints;
 	
 	// Generate the first point randomly and add it to our containers
 	FVector2D FirstPoint = {static_cast<float>(FMath::RandRange(0, Width)), static_cast<float>(FMath::RandRange(0, Height))};
 	ProcessList.Add(FirstPoint);
-	SamplePoints.Add(FirstPoint);
+	Points.Add(FirstPoint);
 	GridMap[WorldToGrid(FirstPoint).X][WorldToGrid(FirstPoint).Y] = FirstPoint;
 	
 	// Generate other points from point in queue
@@ -51,7 +53,7 @@ void PoissonNoise::GenerateNoise()
 			{
 				// Update containers
 				ProcessList.Add(NewPoint);
-				SamplePoints.Add(NewPoint);
+				Points.Add(NewPoint);
 				GridMap[WorldToGrid(NewPoint).X][WorldToGrid(NewPoint).Y] = NewPoint;
 			}
 		}
@@ -59,12 +61,12 @@ void PoissonNoise::GenerateNoise()
 	Generated = true;
 }
 
-FVector2D PoissonNoise::GetValue(int x, int y)
+FVector2D APoissonNoise::GetValue(int x, int y)
 {
 	return GridMap[x / CellSize][y / CellSize];
 }
 
-void PoissonNoise::GenerateTexture()
+void APoissonNoise::GenerateTexture()
 {
 	FTexture2DMipMap& Mip = Texture->GetPlatformData()->Mips[0];
 	void* TextureData = Mip.BulkData.Lock(LOCK_READ_WRITE);
@@ -99,12 +101,12 @@ void PoissonNoise::GenerateTexture()
 	Texture->UpdateResource();
 }
 
-FVector2D PoissonNoise::WorldToGrid(FVector2D Point)
+FVector2D APoissonNoise::WorldToGrid(FVector2D Point)
 {
 	return {Point.X / CellSize, Point.Y / CellSize};
 }
 
-FVector2D PoissonNoise::GenerateRandomPointAround(FVector2D Point)
+FVector2D APoissonNoise::GenerateRandomPointAround(FVector2D Point)
 {
 	// Non-uniform, favours points closer to the inner ring, leads to denser packings
 	double R1 = FMath::RandRange(0.f, 1.f);
@@ -119,7 +121,7 @@ FVector2D PoissonNoise::GenerateRandomPointAround(FVector2D Point)
 	return {Point.X + Radius * cos(Angle), Point.Y + Radius * sin(Angle)};
 }
 
-bool PoissonNoise::InRect(FVector2D Point, FVector2D Rect)
+bool APoissonNoise::InRect(FVector2D Point, FVector2D Rect)
 {
 	if (Point.X < Rect.X && Point.X > 0 && Point.Y < Rect.Y && Point.Y > 0)
 	{
@@ -128,7 +130,7 @@ bool PoissonNoise::InRect(FVector2D Point, FVector2D Rect)
 	return false;
 }
 
-bool PoissonNoise::InNeighborhood(FVector2D Point)
+bool APoissonNoise::InNeighborhood(FVector2D Point)
 {
 	FVector2D GridPoint = WorldToGrid(Point);
 	// Get the neighbourhood if the point in the grid
@@ -143,7 +145,7 @@ bool PoissonNoise::InNeighborhood(FVector2D Point)
 	return false;
 }
 
-TArray<FVector2D> PoissonNoise::SquareAroundPoint(FVector2D Point)
+TArray<FVector2D> APoissonNoise::SquareAroundPoint(FVector2D Point)
 {
 	TArray<FVector2D> CellsAroundPoint;
 	// Make sure that the cells are in the range of our gridmap
@@ -152,9 +154,9 @@ TArray<FVector2D> PoissonNoise::SquareAroundPoint(FVector2D Point)
 	int XEnd = FMath::Min(Point.X + 2, GridMap.Num() - 1 );
 	int YEnd = FMath::Min(Point.Y + 2, GridMap[XEnd].Num() - 1 );
 	
-	for (int x = XStart; x < XEnd; x++)
+	for (int x = XStart; x <= XEnd; x++)
 	{
-		for (int y = YStart; y < YEnd; y++)
+		for (int y = YStart; y <= YEnd; y++)
 		{
 			CellsAroundPoint.Add({static_cast<double>(x), static_cast<double>(y)});
 		}
