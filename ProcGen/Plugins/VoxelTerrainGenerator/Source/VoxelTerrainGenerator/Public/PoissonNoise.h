@@ -23,6 +23,8 @@ public:
 	void GenerateTexture();
 	
 	FVector2D WorldToGrid(FVector2D Point);
+	
+	FVector2D CenterPointToWorld(FVector2D Point);
 private:
 	
 	FVector2D GenerateRandomPointAround(FVector2D Point);

@@ -82,7 +82,6 @@ void AChunk::GenerateBlocks()
 		{
 			const float XPos = (x * 100 + Location.X) / 100;
 			const float YPos = (y * 100 + Location.Y) / 100;
-			
 			const int Height = GetHeightAtLocation(XPos, YPos, static_cast<float>(x) / Size, static_cast<float>(y) / Size);
 			
 			for (int z = 0; z <= Height; ++z)
@@ -97,15 +96,27 @@ void AChunk::GenerateBlocks()
 					Blocks[GetBlockIndex(x, y, z)] = GetBlockType(EBlockType::SubSurface);
 				}
 			}
+			bool bTreeHere = false;
+			for (int i = 0; i < TreeCoords.Num(); i++)
+			{
+				FVector2D BlockLocation = {Location.X + x * 100, Location.Y + y * 100};
+				if (FVector2D::Distance(TreeCoords[i], BlockLocation) < 200)
+				{
+					bTreeHere = true;
+					TreeCoords.RemoveAt(i);
+				}
+			}
 			// Everything above the height will be air
 			for (int z = Height; z < Size; ++z)
 			{
-				Blocks[GetBlockIndex(x, y, z)] = GetBlockType(EBlockType::Air);
-				/*FVector2D WorldPosition = {x * 100 + Location.X, y * 100 + Location.Y};
-				if (TreeNoise->GetValue(abs(WorldPosition.X) / 2, abs(WorldPosition.Y) / 2) != FVector2D{0, 0})
+				if (bTreeHere && z < Height + 6)
 				{
 					Blocks[GetBlockIndex(x, y, z)] = GetBlockType(EBlockType::SubSurface);
-				}*/
+				}
+				else
+				{
+					Blocks[GetBlockIndex(x, y, z)] = GetBlockType(EBlockType::Air);
+				}
 			}
 			if (Height > Size * MountainHeightRequirement)
 			{
@@ -375,6 +386,16 @@ void AChunk::SetSize(int NewSize)
 	Size = NewSize;
 	
 	Blocks.SetNum(Size * Size * Size);
+}
+
+bool AChunk::PointInChunkBounds(FVector2D Point)
+{
+	FVector2D ChunkLocation = {GetActorLocation().X, GetActorLocation().Y};
+	if (Point.X > ChunkLocation.X && Point.X < ChunkLocation.X + Size * 100 && Point.Y > ChunkLocation.Y && Point.Y < ChunkLocation.Y + Size * 100)
+	{
+		return true;
+	}
+	return false;
 }
 
 

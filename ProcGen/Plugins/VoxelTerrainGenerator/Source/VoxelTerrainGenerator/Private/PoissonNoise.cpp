@@ -62,7 +62,8 @@ void PoissonNoise::GenerateNoise()
 
 FVector2D PoissonNoise::GetValue(int x, int y)
 {
-	return GridMap[abs(x) / CellSize][abs(y) / CellSize];
+	FVector2D GridPoint = GridMap[(x + Width / 2) / CellSize][(y + Height / 2) / CellSize];
+	return {GridPoint.X - Width / 2, GridPoint.Y - Height / 2};
 }
 
 void PoissonNoise::GenerateTexture()
@@ -103,6 +104,11 @@ void PoissonNoise::GenerateTexture()
 FVector2D PoissonNoise::WorldToGrid(FVector2D Point)
 {
 	return {Point.X / CellSize, Point.Y / CellSize};
+}
+
+FVector2D PoissonNoise::CenterPointToWorld(FVector2D Point)
+{
+	return {Point.X - Width / 2, Point.Y - Height / 2};
 }
 
 FVector2D PoissonNoise::GenerateRandomPointAround(FVector2D Point)

@@ -50,6 +50,9 @@ public:
 	
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Chunk")
 	float PreLoadDistance = 5;
+	
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Chunk")
+	TSubclassOf<AActor> TreeActor;
 
 protected:
 	// Called when the game starts or when spawned

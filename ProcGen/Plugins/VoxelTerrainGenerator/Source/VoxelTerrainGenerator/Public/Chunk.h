@@ -76,6 +76,8 @@ public:
 	 */
 	void SetSize(int NewSize);
 	
+	bool PointInChunkBounds(FVector2D Point);
+	
 private:
 	/**
 	 * Populate the Blocks array according to our heightmap
@@ -225,6 +227,9 @@ public:
 	
 	UPROPERTY(VisibleAnywhere, Category = "Chunk")
 	TArray<FChunkNeighbour> ChunkNeighbours;
+	
+	UPROPERTY(VisibleAnywhere, Category = "Chunk")
+	TArray<FVector2D> TreeCoords;
 
 private:
 	UPROPERTY()

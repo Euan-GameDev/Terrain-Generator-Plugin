@@ -48,7 +48,6 @@ void AChunkWorld::BeginPlay()
 	TreeNoise->MinDistance = 5000;
 	TreeNoise->GenerateNoise();
 	
-	
 	TArray<FTask> Tasks;
 	for (int x = -DrawDistance; x < DrawDistance; ++x)
 	{
@@ -58,10 +57,17 @@ void AChunkWorld::BeginPlay()
 			int BiomeTypeIndex = GetBiomeType({static_cast<double>(x + DrawDistance), static_cast<double>(y + DrawDistance)});
 			TSubclassOf<AActor> ChunkType = BiomeChunks[BiomeTypeIndex];
 			AChunk* CurrentChunk = GetWorld()->SpawnActor<AChunk>(ChunkType, FVector(x * ChunkSize * 100, y * ChunkSize * 100, 0), FRotator::ZeroRotator);
+			CurrentChunk->SetSize(ChunkSize);
 			CurrentChunk->SetNoise(Noise);
 			CurrentChunk->SetTreeNoise(TreeNoise);
 			CurrentChunk->ChunkCoords = {static_cast<double>(x + DrawDistance), static_cast<double>(y + DrawDistance)};
-			CurrentChunk->SetSize(ChunkSize);
+			for (int i = 0; i < TreeNoise->Points.Num(); i++)
+			{
+				if (CurrentChunk->PointInChunkBounds(TreeNoise->CenterPointToWorld(TreeNoise->Points[i])))
+				{
+					CurrentChunk->TreeCoords.Add(TreeNoise->CenterPointToWorld(TreeNoise->Points[i]));
+				}
+			}
 			for (int i = 0; i < CurrentChunk->GetNeighbours().Num(); i++)
 			{
 				int Type = GetBiomeType(CurrentChunk->GetNeighbours()[i]);
