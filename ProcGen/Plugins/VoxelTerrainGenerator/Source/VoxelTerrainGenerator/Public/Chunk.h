@@ -84,6 +84,8 @@ private:
 	 */
 	void GenerateBlocks();
 	
+	void ApplyQueuedBlocks();
+	
 	/**
 	 * Populate VertexData array based on the blocks
 	 */
@@ -217,6 +219,12 @@ public:
 	TArray<FBlock> MountainBlocks;
 	
 	UPROPERTY(EditAnywhere, Category = "Chunk")
+	TArray<FBlock> TreeStumpBlocks;
+	
+	UPROPERTY(EditAnywhere, Category = "Chunk")
+	TArray<FBlock> TreeLeavesBlocks;
+	
+	UPROPERTY(EditAnywhere, Category = "Chunk")
 	bool GenerateCollision = false;
 	
 	UPROPERTY(EditAnywhere, Category = "Chunk")
@@ -230,6 +238,8 @@ public:
 	
 	UPROPERTY(VisibleAnywhere, Category = "Chunk")
 	TArray<FVector2D> TreeCoords;
+	
+	TArray<TPair<int, FBlock>> BlockQueue;
 
 private:
 	UPROPERTY()

@@ -45,7 +45,7 @@ void AChunkWorld::BeginPlay()
 	
 	TreeNoise->Width = DrawDistance * 200 * ChunkSize;
 	TreeNoise->Height = DrawDistance * 200 * ChunkSize;
-	TreeNoise->MinDistance = 5000;
+	TreeNoise->MinDistance = 2000;
 	TreeNoise->GenerateNoise();
 	
 	TArray<FTask> Tasks;
@@ -61,6 +61,7 @@ void AChunkWorld::BeginPlay()
 			CurrentChunk->SetNoise(Noise);
 			CurrentChunk->SetTreeNoise(TreeNoise);
 			CurrentChunk->ChunkCoords = {static_cast<double>(x + DrawDistance), static_cast<double>(y + DrawDistance)};
+			// For each tree point in the area of the newly generated chunk add it to the chunk.
 			for (int i = 0; i < TreeNoise->Points.Num(); i++)
 			{
 				if (CurrentChunk->PointInChunkBounds(TreeNoise->CenterPointToWorld(TreeNoise->Points[i])))
@@ -114,7 +115,7 @@ void AChunkWorld::Tick(float DeltaTime)
 		{
 			CheckNeighbours(LoadedChunks[i]);
 		}
-		// if we aren't in range of the chunk and it should be loaded then unload it and remove it from the loaded array
+		// if we aren't in range of the chunk, and it should be loaded then unload it and remove it from the loaded array
 		else
 		{
 			LoadedChunks[i]->DisableMesh();

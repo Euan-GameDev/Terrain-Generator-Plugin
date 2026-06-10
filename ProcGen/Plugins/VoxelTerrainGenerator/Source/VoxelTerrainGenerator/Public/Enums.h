@@ -21,5 +21,7 @@ enum class EBlockType : uint8
 	SubSurface,
 	Surface,
 	Mountain,
+	TreeStump,
+	TreeLeaves,
 	Null
 };

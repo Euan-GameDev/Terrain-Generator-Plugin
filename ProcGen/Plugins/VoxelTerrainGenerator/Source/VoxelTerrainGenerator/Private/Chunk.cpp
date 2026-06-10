@@ -35,6 +35,9 @@ void AChunk::BeginPlay()
 	AddBlockLayerToArray(SubSurfaceBlocks);
 	AddBlockLayerToArray(UnderGroundBlocks);
 	AddBlockLayerToArray(MountainBlocks);
+	AddBlockLayerToArray(TreeStumpBlocks);
+	AddBlockLayerToArray(TreeLeavesBlocks);
+	
 	for (int i = 0; i < BlockTypes.Num(); i++)
 	{
 		VertexData.Add(TArray<FVector>());
@@ -97,25 +100,43 @@ void AChunk::GenerateBlocks()
 				}
 			}
 			bool bTreeHere = false;
-			for (int i = 0; i < TreeCoords.Num(); i++)
+			if (x < Size - 1 && y < Size - 1 && x > 0 && y > 0)
 			{
-				FVector2D BlockLocation = {Location.X + x * 100, Location.Y + y * 100};
-				if (FVector2D::Distance(TreeCoords[i], BlockLocation) < 200)
+				for (int i = 0; i < TreeCoords.Num(); i++)
 				{
-					bTreeHere = true;
-					TreeCoords.RemoveAt(i);
+					FVector2D BlockLocation = {Location.X + x * 100, Location.Y + y * 100};
+					if (FVector2D::Distance(TreeCoords[i], BlockLocation) < 200)
+					{
+						bTreeHere = true;
+						TreeCoords.RemoveAt(i);
+					}
 				}
 			}
-			// Everything above the height will be air
+			
+			// Everything above the height will be air unless there is a tree if there is a tree we place it there
 			for (int z = Height; z < Size; ++z)
 			{
 				if (bTreeHere && z < Height + 6)
 				{
-					Blocks[GetBlockIndex(x, y, z)] = GetBlockType(EBlockType::SubSurface);
+					if (z >= Height + 4)
+					{
+						Blocks[GetBlockIndex(x - 1, y, z)] = GetBlockType(EBlockType::TreeLeaves);
+						Blocks[GetBlockIndex(x + 1, y, z)] = GetBlockType(EBlockType::TreeLeaves);
+						Blocks[GetBlockIndex(x, y - 1, z)] = GetBlockType(EBlockType::TreeLeaves);
+						Blocks[GetBlockIndex(x, y + 1, z)] = GetBlockType(EBlockType::TreeLeaves);
+					}
+					Blocks[GetBlockIndex(x, y, z)] = GetBlockType(EBlockType::TreeStump);
+					if (z == Height + 5)
+					{
+						Blocks[GetBlockIndex(x, y, z + 1)] = GetBlockType(EBlockType::TreeLeaves);
+					}
 				}
 				else
 				{
-					Blocks[GetBlockIndex(x, y, z)] = GetBlockType(EBlockType::Air);
+					if (Blocks[GetBlockIndex(x, y, z)].Type == EBlockType::Null)
+					{
+						Blocks[GetBlockIndex(x, y, z)] = GetBlockType(EBlockType::Air);
+					}
 				}
 			}
 			if (Height > Size * MountainHeightRequirement)
@@ -314,6 +335,12 @@ FBlock AChunk::GetBlockType(EBlockType layer) const
 	case EBlockType::Mountain:
 		BlockArray = MountainBlocks;
 		break;
+	case EBlockType::TreeStump:
+		BlockArray = TreeStumpBlocks;
+		break;
+	case EBlockType::TreeLeaves:
+		BlockArray = TreeLeavesBlocks;
+		break;
 	}
 	// Count up the total probability score of all the blocks
 	float TotalProb = 0.f;
@@ -366,7 +393,8 @@ void AChunk::GenerateContainers()
 	AddBlockLayerToArray(SubSurfaceBlocks);
 	AddBlockLayerToArray(UnderGroundBlocks);
 	AddBlockLayerToArray(MountainBlocks);
-	
+	AddBlockLayerToArray(TreeStumpBlocks);
+	AddBlockLayerToArray(TreeLeavesBlocks);
 	
 	for (int i = 0; i < BlockTypes.Num(); ++i)
 	{
