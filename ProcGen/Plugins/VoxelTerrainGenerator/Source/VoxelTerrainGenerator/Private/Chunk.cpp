@@ -57,14 +57,6 @@ void AChunk::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 }
 
-void AChunk::Generate()
-{
-	FTask GenBlocks = Launch(UE_SOURCE_LOCATION, [this]{GenerateBlocks();});
-
-	FTask GenMesh = Launch(UE_SOURCE_LOCATION, [this]{GenerateMesh();}, GenBlocks);
-	
-}
-
 void AChunk::SetNoise(TObjectPtr<FastNoiseLite> ChunkNoise)
 {
 	Noise = ChunkNoise;
@@ -99,44 +91,50 @@ void AChunk::GenerateBlocks()
 					Blocks[GetBlockIndex(x, y, z)] = GetBlockType(EBlockType::SubSurface);
 				}
 			}
+			
 			bool bTreeHere = false;
-			if (x < Size - 1 && y < Size - 1 && x > 0 && y > 0)
+			TArray<TPair<FVector, EBlockType>> TreeBlocks;
+			for (int i = 0; i < TreeCoords.Num(); i++)
 			{
-				for (int i = 0; i < TreeCoords.Num(); i++)
+				FVector2D BlockLocation = {Location.X + x * 100, Location.Y + y * 100};
+				if (FVector2D::Distance(TreeCoords[i], BlockLocation) < 200)
 				{
-					FVector2D BlockLocation = {Location.X + x * 100, Location.Y + y * 100};
-					if (FVector2D::Distance(TreeCoords[i], BlockLocation) < 200)
-					{
-						bTreeHere = true;
-						TreeCoords.RemoveAt(i);
-					}
+					bTreeHere = true;
+					TreeCoords.RemoveAt(i);
+					TreeBlocks = GenerateTree();
 				}
 			}
 			
-			// Everything above the height will be air unless there is a tree if there is a tree we place it there
-			for (int z = Height; z < Size; ++z)
+			if (bTreeHere)
 			{
-				if (bTreeHere && z < Height + 6)
+				for (TPair Block : TreeBlocks)
 				{
-					if (z >= Height + 4)
+					FVector BlockCoords = FVector{static_cast<double>(x), static_cast<double>(y), static_cast<double>(Height)} + Block.Key;
+					if (BlockCoords.X < 0 || BlockCoords.X >= Size || BlockCoords.Y < 0 || BlockCoords.Y >= Size)
 					{
-						Blocks[GetBlockIndex(x - 1, y, z)] = GetBlockType(EBlockType::TreeLeaves);
-						Blocks[GetBlockIndex(x + 1, y, z)] = GetBlockType(EBlockType::TreeLeaves);
-						Blocks[GetBlockIndex(x, y - 1, z)] = GetBlockType(EBlockType::TreeLeaves);
-						Blocks[GetBlockIndex(x, y + 1, z)] = GetBlockType(EBlockType::TreeLeaves);
+						TreeQueue.Add(TPair<TPair<FVector, EBlockType>, FVector2D>{TPair<FVector, EBlockType>{
+							BlockCoords + FVector{0, -FMath::Clamp(Block.Key.X, -1, 1),
+								-FMath::Clamp(Block.Key.Y, -1, 1)}, 
+										Block.Value},
+										FVector2D{FMath::Clamp(Block.Key.X, -1, 1),
+											FMath::Clamp(Block.Key.Y, -1, 1)}});
 					}
-					Blocks[GetBlockIndex(x, y, z)] = GetBlockType(EBlockType::TreeStump);
-					if (z == Height + 5)
+					else if (BlockCoords.Z < 0 || BlockCoords.Z >= Size)
 					{
-						Blocks[GetBlockIndex(x, y, z + 1)] = GetBlockType(EBlockType::TreeLeaves);
+							
+					}
+					else
+					{
+						Blocks[GetBlockIndex(BlockCoords.X, BlockCoords.Y, BlockCoords.Z)] = GetBlockType(Block.Value);
 					}
 				}
-				else
+			}
+			// Everything above the height will be air
+			for (int z = Height; z < Size; ++z)
+			{
+				if (Blocks[GetBlockIndex(x, y, z)].Type == EBlockType::Null)
 				{
-					if (Blocks[GetBlockIndex(x, y, z)].Type == EBlockType::Null)
-					{
-						Blocks[GetBlockIndex(x, y, z)] = GetBlockType(EBlockType::Air);
-					}
+					Blocks[GetBlockIndex(x, y, z)] = GetBlockType(EBlockType::Air);
 				}
 			}
 			if (Height > Size * MountainHeightRequirement)
@@ -147,13 +145,21 @@ void AChunk::GenerateBlocks()
 			{
 				Blocks[GetBlockIndex(x, y, Height)] = GetBlockType(EBlockType::Surface);
 			}
-			
 		}
+	}
+}
+
+void AChunk::ApplyQueuedBlocks()
+{
+	for (TPair Block : BlockQueue)
+	{
+		Blocks[GetBlockIndex(Block.Key)] = GetBlockType(Block.Value);
 	}
 }
 
 void AChunk::GenerateMesh()
 {
+	ApplyQueuedBlocks();
 	for (int x = 0; x < Size; ++x)
 	{
 		for (int y = 0; y < Size; ++y)
@@ -254,6 +260,11 @@ FVector AChunk::GetPositionInDirection(EDirection Direction, FVector Position) c
 int AChunk::GetBlockIndex(int X, int Y, int Z) const
 {
 	return Z * Size * Size + Y * Size + X;
+}
+
+int AChunk::GetBlockIndex(FVector Coordinates) const
+{
+	return Coordinates.Z * Size * Size + Coordinates.Y * Size + Coordinates.X;
 }
 
 int AChunk::GetHeightAtLocation(float x, float y, float xProgress, float yProgress)
@@ -407,6 +418,34 @@ void AChunk::GenerateContainers()
 		VertexCount.Add(0);
 		BlockTypes[i]->BlockID = i;
 	}
+}
+
+TArray<TPair<FVector, EBlockType>> AChunk::GenerateTree()
+{
+	TArray<TPair<FVector, EBlockType>> TreeBlocks;
+	
+	TreeBlocks.Emplace(FVector{0, 0, 1}, EBlockType::TreeStump);
+	TreeBlocks.Emplace(FVector{0, 0, 2}, EBlockType::TreeStump);
+	TreeBlocks.Emplace(FVector{0, 0, 3}, EBlockType::TreeStump);
+	TreeBlocks.Emplace(FVector{0, 0, 4}, EBlockType::TreeStump);
+	TreeBlocks.Emplace(FVector{0, 0, 5}, EBlockType::TreeStump);
+	
+	TreeBlocks.Emplace(FVector{-1, 0, 4}, EBlockType::TreeLeaves);
+	TreeBlocks.Emplace(FVector{-2, 0, 4}, EBlockType::TreeLeaves);
+	TreeBlocks.Emplace(FVector{-3, 0, 4}, EBlockType::TreeLeaves);
+	TreeBlocks.Emplace(FVector{1, 0, 4}, EBlockType::TreeLeaves);
+	TreeBlocks.Emplace(FVector{2, 0, 4}, EBlockType::TreeLeaves);
+	TreeBlocks.Emplace(FVector{3, 0, 4}, EBlockType::TreeLeaves);
+	
+	TreeBlocks.Emplace(FVector{0, -1, 4}, EBlockType::TreeLeaves);
+	TreeBlocks.Emplace(FVector{0, -2, 4}, EBlockType::TreeLeaves);
+	TreeBlocks.Emplace(FVector{0, -3, 4}, EBlockType::TreeLeaves);
+	TreeBlocks.Emplace(FVector{0, 1, 4}, EBlockType::TreeLeaves);
+	TreeBlocks.Emplace(FVector{0, 2, 4}, EBlockType::TreeLeaves);
+	TreeBlocks.Emplace(FVector{0, 3, 4}, EBlockType::TreeLeaves);
+
+	
+	return TreeBlocks;
 }
 
 void AChunk::SetSize(int NewSize)

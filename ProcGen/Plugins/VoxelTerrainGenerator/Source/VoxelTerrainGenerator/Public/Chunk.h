@@ -32,11 +32,6 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	
 	/**
-	 * Calls functions for generating mesh details
-	 */
-	void Generate();
-	
-	/**
 	 * Setter for terrain noise values
 	 * @param ChunkNoise Noise value from the chunkworld actor
 	 */
@@ -78,18 +73,19 @@ public:
 	
 	bool PointInChunkBounds(FVector2D Point);
 	
-private:
 	/**
 	 * Populate the Blocks array according to our heightmap
 	 */
 	void GenerateBlocks();
 	
-	void ApplyQueuedBlocks();
-	
 	/**
-	 * Populate VertexData array based on the blocks
-	 */
+     * Populate VertexData array based on the blocks
+     */
 	void GenerateMesh();
+	
+private:
+	
+	void ApplyQueuedBlocks();
 	
 	/**
 	 * 
@@ -130,6 +126,14 @@ private:
 	 * @return Index of the block at xyz location in the Blocks array
 	 */
 	int GetBlockIndex(int X, int Y, int Z) const;
+	
+
+	/**
+	 * 
+	 * @param Coordinates 
+	 * @return 
+	 */
+	int GetBlockIndex(FVector Coordinates) const;
 	/**
 	 * 
 	 * @param x 
@@ -155,6 +159,8 @@ private:
 	 * Sets up empty containers for the meshes details
 	 */
 	void GenerateContainers();
+	
+	TArray<TPair<FVector, EBlockType>> GenerateTree();
 	
 public:
 	/**
@@ -239,8 +245,10 @@ public:
 	UPROPERTY(VisibleAnywhere, Category = "Chunk")
 	TArray<FVector2D> TreeCoords;
 	
-	TArray<TPair<int, FBlock>> BlockQueue;
-
+	TArray<TPair<TPair<FVector, EBlockType>, FVector2D>> TreeQueue;
+	
+	TArray<TPair<FVector, EBlockType>> BlockQueue;
+	
 private:
 	UPROPERTY()
 	TObjectPtr<UProceduralMeshComponent> Mesh;

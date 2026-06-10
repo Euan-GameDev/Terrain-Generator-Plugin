@@ -7,9 +7,12 @@
 #include "FastNoiseLite.h"
 #include "CoreMinimal.h"
 #include "PoissonNoise.h"
+#include "DataWrappers/ChaosVDQueryDataWrappers.h"
 #include "Kismet/GameplayStatics.h"
+#include "UObject/FastReferenceCollector.h"
 
 DECLARE_STATS_GROUP(TEXT("PerformanceStats"), STATGROUP_PerfStats, STATCAT)
+
 DECLARE_CYCLE_STAT(TEXT("GenPrep"), GENPREP, STATGROUP_PerfStats)
 DECLARE_CYCLE_STAT(TEXT("GenMesh"), GENMESH, STATGROUP_PerfStats)
 
@@ -77,13 +80,38 @@ void AChunkWorld::BeginPlay()
 			}
 			
 			
-			Tasks.Add(UE::Tasks::Launch(UE_SOURCE_LOCATION, [CurrentChunk]{CurrentChunk->Generate();}));
+			Tasks.Add(UE::Tasks::Launch(UE_SOURCE_LOCATION, [CurrentChunk]{CurrentChunk->GenerateBlocks();}));
 			CurrentArray.Add(CurrentChunk);
 		}
 		Chunks.Add(CurrentArray);
 	}
 	UE::Tasks::Wait(Tasks);
-	
+	for (int x = 0; x < Chunks.Num(); x++)
+	{
+		for (int y = 0; y < Chunks.Num(); y++)
+		{
+			for (TPair Block : Chunks[x][y]->TreeQueue)
+			{
+				if (x + Block.Value.X < 0 || x + Block.Value.X >= Chunks.Num() || y + Block.Value.Y < 0 || y + Block.Value.Y >= Chunks.Num())
+				{
+					
+				}
+				else
+				{
+					Chunks[x + Block.Value.X][y + Block.Value.Y]->BlockQueue.Add(Block.Key);
+				}
+			}
+		}
+	}
+	Tasks.Empty();
+	for (TArray<AChunk*> ChunkArray : Chunks)
+	{
+		for (AChunk* CurrentChunk : ChunkArray)
+		{
+			Tasks.Add(UE::Tasks::Launch(UE_SOURCE_LOCATION, [CurrentChunk] {CurrentChunk->GenerateMesh();}));
+		}
+	}
+	UE::Tasks::Wait(Tasks);
 	// Load the chunk at the middle of the world instantly
 	PreLoadInDistance(PreLoadDistance);
 	FinishedGenerating();
