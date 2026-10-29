@@ -444,7 +444,8 @@ TArray<TPair<FVector, EBlockType>> AChunk::GenerateTree()
 	TreeBlocks.Emplace(FVector{0, 2, 4}, EBlockType::TreeLeaves);
 	TreeBlocks.Emplace(FVector{0, 3, 4}, EBlockType::TreeLeaves);
 
-	
+	// Disabling Trees
+	TreeBlocks.Empty();
 	return TreeBlocks;
 }
 
